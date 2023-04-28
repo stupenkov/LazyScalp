@@ -32,9 +32,9 @@ if (await chartPage.IsOpenScreenerAsync())
     await chartPage.CloseScreenerAsync();
 
 await chartPage.OpenScreenerAsync();
-await chartPage.InputTicker("usdt.p");
 await chartPage.RefreshPage(); // fix съезжает панель скринира
 await chartPage.UpdateScreenerDataAsync();
+await chartPage.InputTicker("usdt.p");
 int count = await chartPage.CountScreenerInstrumentsAsync();
 Console.WriteLine(count);
 var screenshotAnalyzer = new ScreenshotAnalyzer(indicatorOptions);
