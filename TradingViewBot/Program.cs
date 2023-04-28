@@ -32,8 +32,8 @@ if (await chartPage.IsOpenScreenerAsync())
     await chartPage.CloseScreenerAsync();
 
 await chartPage.OpenScreenerAsync();
-await chartPage.InputTicker("usdt.p");
 await chartPage.RefreshPage(); // fix съезжает панель скринира
+await chartPage.InputTicker("usdt.p");
 await chartPage.UpdateScreenerDataAsync();
 int count = await chartPage.CountScreenerInstrumentsAsync();
 Console.WriteLine(count);
