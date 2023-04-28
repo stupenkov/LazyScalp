@@ -14,6 +14,7 @@ public interface ITradingView
     Task<bool> IsOpenToastAsync();
     Task CloseToastAsync();
     Task InputTicker(string name);
+    Task RefreshPage();
 
     // TODO: Task ChangeTimeFrame(TimeFrame timeFrame);
 }

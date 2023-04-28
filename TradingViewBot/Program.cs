@@ -52,9 +52,15 @@ for (int i = 0; i < count; i++)
         continue;
     }
 
+    int updateCounter = 0;
     FinancialInstrument? financialInstrument = null;
     do
     {
+        if (updateCounter > 4)
+        {
+            await chartPage.RefreshPage();
+        }
+
         await Task.Delay(2000);
         try
         {
@@ -65,6 +71,8 @@ for (int i = 0; i < count; i++)
             Console.WriteLine($"index: {i}, {e}");
             break;
         }
+
+        updateCounter++;
     }
     while (!await screenshotAnalyzer.IndicatorLoadedAsync(financialInstrument!.Screenshot));
 
@@ -125,22 +133,10 @@ for (int i = 0; i < count; i++)
     if (i == count - 1)
     {
         i = -1;
-        webDriver.Navigate().Refresh();
-        try
-        {
-            webDriver.SwitchTo().Alert().Accept();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
 
-        await Task.Delay(5000);
+        await chartPage.RefreshPage();
         await chartPage.UpdateScreenerDataAsync();
         await chartPage.InputTicker("usdt.p");
         count = await chartPage.CountScreenerInstrumentsAsync();
     }
 }
-
-
-

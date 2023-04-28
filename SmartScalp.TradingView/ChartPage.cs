@@ -184,4 +184,18 @@ public class ChartPage : ITradingView
         _tickerInput.SendKeys(name);
         await Task.Delay(3000);
     }
+
+    public async Task RefreshPage()
+    {
+        _webDriver.Navigate().Refresh();
+        try
+        {
+            _webDriver.SwitchTo().Alert().Accept();
+        }
+        catch (Exception)
+        {
+        }
+
+        await Task.Delay(5000);
+    }
 }
