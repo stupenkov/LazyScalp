@@ -11,8 +11,8 @@ public interface ITradingView
     Task<int> CountScreenerInstrumentsAsync();
     Task SelectInstrumentAsync(int index);
     Task<FinancialInstrument> GetInstrumentAsync(int index);
-    Task<bool> IsOpenToastAsync();
-    Task CloseToastAsync();
+    Task<bool> IsOpenAdsToastAsync();
+    Task CloseAdsToastAsync();
     Task InputTicker(string name);
     Task RefreshPage();
 

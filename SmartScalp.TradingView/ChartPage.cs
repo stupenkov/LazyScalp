@@ -3,9 +3,6 @@ using SeleniumExtras.PageObjects;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
 using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
-using SkiaSharp;
-using System;
 
 namespace SmartScalp.TradingView;
 
@@ -76,52 +73,37 @@ public class ChartPage : ITradingView
     public ChartPage(IWebDriver webDriver)
     {
         _webDriver = webDriver;
-        _wait = new WebDriverWait(_webDriver, TimeSpan.FromSeconds(5));
+        _wait = new WebDriverWait(_webDriver, TimeSpan.FromSeconds(10));
     }
 
     public async Task LoginAsync(string login, string password)
     {
         _webDriver.Navigate().GoToUrl(PageUrl);
-        await Task.Delay(3000);
-
-        _wait.Until(d => ExpectedConditions.ElementToBeClickable(_humburgerButton));
-        _humburgerButton.Click();
-
-        _wait.Until(d => ExpectedConditions.ElementToBeClickable(_enterItem));
-        _enterItem.Click();
-
-        await Task.Delay(500);
-        _wait.Until(d => ExpectedConditions.ElementToBeClickable(_emailLoginButton));
-        _emailLoginButton.Click();
-
+        _wait.Until(ExpectedConditions.ElementToBeClickable(_humburgerButton)).Click();
+        _wait.Until(ExpectedConditions.ElementToBeClickable(_enterItem)).Click();
+        _wait.Until(ExpectedConditions.ElementToBeClickable(_emailLoginButton)).Click();
         _emailInput.SendKeys(login);
         _passwordInput.SendKeys(password);
         _loginSubmitButton.Click();
+        await Task.Delay(1000);
     }
 
-    public async Task SetChartTemplateAsync()
+    public Task SetChartTemplateAsync()
     {
-        await Task.Delay(1000);
-        _wait.Until(d => ExpectedConditions.ElementToBeClickable(_chartControlButton));
-        _chartControlButton.Click();
-
-        await Task.Delay(1000);
-        _wait.Until(d => ExpectedConditions.ElementToBeClickable(_firstChartTemplateItem));
-        _firstChartTemplateItem.Click();
-        await Task.Delay(5000);
+        _wait.Until(ExpectedConditions.ElementToBeClickable(_chartControlButton)).Click();
+        _wait.Until(ExpectedConditions.ElementToBeClickable(_firstChartTemplateItem)).Click();
+        return Task.CompletedTask;
     }
 
     public async Task OpenScreenerAsync()
     {
-        _wait.Until(d => ExpectedConditions.ElementToBeClickable(_openScreenerButton));
-        _openScreenerButton.Click();
-        await Task.Delay(3000);
+        _wait.Until(ExpectedConditions.ElementToBeClickable(_openScreenerButton)).Click();
+        await Task.Delay(1000);
     }
 
     public Task CloseScreenerAsync()
     {
-        _wait.Until(d => ExpectedConditions.ElementToBeClickable(_closeScreenerButton));
-        _closeScreenerButton.Click();
+        _wait.Until(ExpectedConditions.ElementToBeClickable(_closeScreenerButton)).Click();
         return Task.CompletedTask;
     }
 
@@ -133,23 +115,19 @@ public class ChartPage : ITradingView
     public Task SelectInstrumentAsync(int index)
     {
         var tr = _screenerInstrumentsTable.FindElements(By.TagName("tr"))[index];
-        _wait.Until(d => ExpectedConditions.ElementToBeClickable(tr));
-        tr.Click();
+        _wait.Until(ExpectedConditions.ElementToBeClickable(tr)).Click();
         return Task.CompletedTask;
     }
 
-    public async Task UpdateScreenerDataAsync()
+    public Task UpdateScreenerDataAsync()
     {
-        await Task.Delay(1000);
-        _wait.Until(d => ExpectedConditions.ElementToBeClickable(_screenerUpdateDataButton));
-        _screenerUpdateDataButton.Click();
-        await Task.Delay(1000);
+        _wait.Until(ExpectedConditions.ElementToBeClickable(_screenerUpdateDataButton)).Click();
+        return Task.CompletedTask;
     }
 
-    public async Task<bool> IsOpenScreenerAsync()
+    public Task<bool> IsOpenScreenerAsync()
     {
-        await Task.Delay(3000);
-        return _webDriver.FindElements(By.XPath("//*[@id=\"bottom-area\"]/div[4]/div[2]/div[1]")).Count > 0;
+        return Task.FromResult(_screenerUpdateDataButton.Displayed);
     }
 
     public Task<FinancialInstrument> GetInstrumentAsync(int index)
@@ -160,27 +138,19 @@ public class ChartPage : ITradingView
         return Task.FromResult(new FinancialInstrument(title.Text, image));
     }
 
-    public Task<bool> IsOpenToastAsync()
+    public Task<bool> IsOpenAdsToastAsync()
     {
         return Task.FromResult(_webDriver.FindElement(By.XPath("/html/body/div[5]")).FindElements(By.TagName("div")).Count > 0);
     }
 
-    public Task CloseToastAsync()
+    public Task CloseAdsToastAsync()
     {
-        _wait.Until(d => ExpectedConditions.ElementToBeClickable(_closeToastButton));
-        _closeToastButton.Click();
+        _wait.Until(ExpectedConditions.ElementToBeClickable(_closeToastButton)).Click();
         return Task.CompletedTask;
-    }
-
-    private byte[] TakeScreenshot()
-    {
-        Screenshot ss = ((ITakesScreenshot)_webDriver).GetScreenshot();
-        return ss.AsByteArray;
     }
 
     public async Task InputTicker(string name)
     {
-        _wait.Until(d => ExpectedConditions.ElementToBeClickable(_tickerInput));
         _tickerInput.SendKeys(name);
         await Task.Delay(3000);
     }
@@ -196,6 +166,12 @@ public class ChartPage : ITradingView
         {
         }
 
-        await Task.Delay(5000);
+        await Task.Delay(0);
+    }
+
+    private byte[] TakeScreenshot()
+    {
+        Screenshot ss = ((ITakesScreenshot)_webDriver).GetScreenshot();
+        return ss.AsByteArray;
     }
 }
