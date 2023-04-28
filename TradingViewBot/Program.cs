@@ -11,6 +11,10 @@ var config = new ConfigurationBuilder()
     .AddEnvironmentVariables()
     .Build();
 
+var imagePreparationOptions = new ImagePreparationOptions();
+config.GetSection("imagePreparation").Bind(imagePreparationOptions);
+var imagePreparation = new ImagePreparation(imagePreparationOptions);
+
 var indicatorOptions = new IndicatorOptions();
 config.GetSection("indicator").Bind(indicatorOptions);
 
@@ -69,6 +73,7 @@ for (int i = 0; i < count; i++)
 
     var signal = await screenshotAnalyzer.AnalyzeAsync(financialInstrument.Screenshot);
     var instrument = await instrumentRepository.FindByNameAsync(financialInstrument.Name);
+    var preparatedImage = imagePreparation.Crop(financialInstrument.Screenshot);
     if (instrument is null)
     {
         instrument = new Instrument
@@ -84,14 +89,14 @@ for (int i = 0; i < count; i++)
         Console.WriteLine($"Add instrument to repo");
 
         if (await screenshotAnalyzer.HasSignalAsync(financialInstrument.Screenshot))
-            await telegramm.SendAsync(new Telegram.TelegramMessage(financialInstrument.Screenshot, financialInstrument.Name));
+            await telegramm.SendAsync(new Telegram.TelegramMessage(preparatedImage, financialInstrument.Name));
     }
 
     SignalsType signals = signalComparer.Compare(new Signal(instrument.HighLevel, instrument.LowLevel), signal);
     if (signals.HasFlag(SignalsType.NewFormationLow | SignalsType.NewFormationHigh))
     {
         Console.WriteLine($"New formation");
-        await telegramm.SendAsync(new Telegram.TelegramMessage(financialInstrument.Screenshot, financialInstrument.Name));
+        await telegramm.SendAsync(new Telegram.TelegramMessage(preparatedImage, $"{financialInstrument.Name}. Новая формация"));
         instrument.LowLevel = signal.LowLevel;
         instrument.HighLevel = signal.HighLevel;
         instrument.LastUpdate = DateTime.UtcNow;
@@ -99,7 +104,7 @@ for (int i = 0; i < count; i++)
     else if (signals.HasFlag(SignalsType.LowComing | SignalsType.HighComing))
     {
         Console.WriteLine($"Coming to level");
-        await telegramm.SendAsync(new Telegram.TelegramMessage(financialInstrument.Screenshot, financialInstrument.Name));
+        await telegramm.SendAsync(new Telegram.TelegramMessage(preparatedImage, $"{financialInstrument.Name}. Цена приближается к уровню"));
         instrument.LowLevel = signal.LowLevel;
         instrument.HighLevel = signal.HighLevel;
         instrument.LastUpdate = DateTime.UtcNow;
@@ -107,7 +112,7 @@ for (int i = 0; i < count; i++)
     else if (signals.HasFlag(SignalsType.Repeat) && DateTime.UtcNow > instrument.LastUpdate + TimeSpan.FromMinutes(60))
     {
         Console.WriteLine($"Repeat");
-        await telegramm.SendAsync(new Telegram.TelegramMessage(financialInstrument.Screenshot, financialInstrument.Name));
+        await telegramm.SendAsync(new Telegram.TelegramMessage(preparatedImage, $"{financialInstrument.Name}. Повтор"));
         instrument.LastUpdate = DateTime.UtcNow;
     }
 
