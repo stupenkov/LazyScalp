@@ -32,9 +32,9 @@ if (await chartPage.IsOpenScreenerAsync())
     await chartPage.CloseScreenerAsync();
 
 await chartPage.OpenScreenerAsync();
-await chartPage.RefreshPage(); // fix съезжает панель скринира
+await chartPage.RefreshPageAsync(); // fix съезжает панель скринира
 await chartPage.UpdateScreenerDataAsync();
-await chartPage.InputTicker("usdt.p");
+await chartPage.InputTickerAsync("usdt.p");
 int count = await chartPage.CountScreenerInstrumentsAsync();
 Console.WriteLine(count);
 var screenshotAnalyzer = new ScreenshotAnalyzer(indicatorOptions);
@@ -59,7 +59,7 @@ for (int i = 0; i < count; i++)
     {
         if (updateCounter > 4)
         {
-            await chartPage.RefreshPage();
+            await chartPage.RefreshPageAsync();
         }
 
         await Task.Delay(2000);
@@ -135,9 +135,9 @@ for (int i = 0; i < count; i++)
     {
         i = -1;
 
-        await chartPage.RefreshPage();
+        await chartPage.RefreshPageAsync();
         await chartPage.UpdateScreenerDataAsync();
-        await chartPage.InputTicker("usdt.p");
+        await chartPage.InputTickerAsync("usdt.p");
         count = await chartPage.CountScreenerInstrumentsAsync();
     }
 }

@@ -13,8 +13,8 @@ public interface ITradingView
     Task<FinancialInstrument> GetInstrumentAsync(int index);
     Task<bool> IsOpenAdsToastAsync();
     Task CloseAdsToastAsync();
-    Task InputTicker(string name);
-    Task RefreshPage();
+    Task InputTickerAsync(string name);
+    Task RefreshPageAsync();
 
     // TODO: Task ChangeTimeFrame(TimeFrame timeFrame);
 }

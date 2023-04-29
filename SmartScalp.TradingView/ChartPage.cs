@@ -78,51 +78,67 @@ public class ChartPage : ITradingView
 
     public async Task LoginAsync(string login, string password)
     {
-        _webDriver.Navigate().GoToUrl(PageUrl);
-        _wait.Until(ExpectedConditions.ElementToBeClickable(_humburgerButton)).Click();
-        _wait.Until(ExpectedConditions.ElementToBeClickable(_enterItem)).Click();
-        _wait.Until(ExpectedConditions.ElementToBeClickable(_emailLoginButton)).Click();
-        _emailInput.SendKeys(login);
-        _passwordInput.SendKeys(password);
-        _loginSubmitButton.Click();
+        await WaitAndRefreshAsync(() =>
+        {
+            _webDriver.Navigate().GoToUrl(PageUrl);
+            _wait.Until(ExpectedConditions.ElementToBeClickable(_humburgerButton)).Click();
+            _wait.Until(ExpectedConditions.ElementToBeClickable(_enterItem)).Click();
+            _wait.Until(ExpectedConditions.ElementToBeClickable(_emailLoginButton)).Click();
+            _emailInput.SendKeys(login);
+            _passwordInput.SendKeys(password);
+            _loginSubmitButton.Click();
+        });
+
         await Task.Delay(1000);
     }
 
-    public Task SetChartTemplateAsync()
+    public async Task SetChartTemplateAsync()
     {
-        _wait.Until(ExpectedConditions.ElementToBeClickable(_chartControlButton)).Click();
-        _wait.Until(ExpectedConditions.ElementToBeClickable(_firstChartTemplateItem)).Click();
-        return Task.CompletedTask;
+        await WaitAndRefreshAsync(() =>
+        {
+            _wait.Until(ExpectedConditions.ElementToBeClickable(_chartControlButton)).Click();
+            _wait.Until(ExpectedConditions.ElementToBeClickable(_firstChartTemplateItem)).Click();
+        });
     }
 
     public async Task OpenScreenerAsync()
     {
-        _wait.Until(ExpectedConditions.ElementToBeClickable(_openScreenerButton)).Click();
+        await WaitAndRefreshAsync(() =>
+        {
+            _wait.Until(ExpectedConditions.ElementToBeClickable(_openScreenerButton)).Click();
+        });
+
         await Task.Delay(1000);
     }
 
-    public Task CloseScreenerAsync()
+    public async Task CloseScreenerAsync()
     {
-        _wait.Until(ExpectedConditions.ElementToBeClickable(_closeScreenerButton)).Click();
-        return Task.CompletedTask;
+        await WaitAndRefreshAsync(_wait.Until(ExpectedConditions.ElementToBeClickable(_closeScreenerButton)).Click);
     }
 
-    public Task<int> CountScreenerInstrumentsAsync()
+    public async Task<int> CountScreenerInstrumentsAsync()
     {
-        return Task.FromResult(_screenerInstrumentsTable.FindElements(By.TagName("tr")).Count);
+        int count = 0;
+        await WaitAndRefreshAsync(() =>
+        {
+            count = _screenerInstrumentsTable.FindElements(By.TagName("tr")).Count;
+        });
+
+        return count;
     }
 
-    public Task SelectInstrumentAsync(int index)
+    public async Task SelectInstrumentAsync(int index)
     {
-        var tr = _screenerInstrumentsTable.FindElements(By.TagName("tr"))[index];
-        _wait.Until(ExpectedConditions.ElementToBeClickable(tr)).Click();
-        return Task.CompletedTask;
+        await WaitAndRefreshAsync(() =>
+        {
+            var tr = _screenerInstrumentsTable.FindElements(By.TagName("tr"))[index];
+            _wait.Until(ExpectedConditions.ElementToBeClickable(tr)).Click();
+        });
     }
 
-    public Task UpdateScreenerDataAsync()
+    public async Task UpdateScreenerDataAsync()
     {
-        _wait.Until(ExpectedConditions.ElementToBeClickable(_screenerUpdateDataButton)).Click();
-        return Task.CompletedTask;
+        await WaitAndRefreshAsync(_wait.Until(ExpectedConditions.ElementToBeClickable(_screenerUpdateDataButton)).Click);
     }
 
     public Task<bool> IsOpenScreenerAsync()
@@ -130,17 +146,29 @@ public class ChartPage : ITradingView
         return Task.FromResult(_screenerUpdateDataButton.Displayed);
     }
 
-    public Task<FinancialInstrument> GetInstrumentAsync(int index)
+    public async Task<FinancialInstrument> GetInstrumentAsync(int index)
     {
-        var tr = _screenerInstrumentsTable.FindElements(By.TagName("tr"))[index];
-        var title = tr.FindElement(By.CssSelector("div.tv-screener-table__symbol-container-description > div"));
-        var image = TakeScreenshot();
-        return Task.FromResult(new FinancialInstrument(title.Text, image));
+        string title = string.Empty;
+        byte[] image = Array.Empty<byte>();
+        await WaitAndRefreshAsync(() =>
+        {
+            var tr = _screenerInstrumentsTable.FindElements(By.TagName("tr"))[index];
+            title = tr.FindElement(By.CssSelector("div.tv-screener-table__symbol-container-description > div")).Text;
+            image = TakeScreenshot();
+        });
+
+        return new FinancialInstrument(title, image);
     }
 
-    public Task<bool> IsOpenAdsToastAsync()
+    public async Task<bool> IsOpenAdsToastAsync()
     {
-        return Task.FromResult(_webDriver.FindElement(By.XPath("/html/body/div[5]")).FindElements(By.TagName("div")).Count > 0);
+        bool? result = null;
+        await WaitAndRefreshAsync(() =>
+        {
+            result = _webDriver.FindElement(By.XPath("/html/body/div[5]")).FindElements(By.TagName("div")).Count > 0;
+        });
+
+        return result!.Value;
     }
 
     public Task CloseAdsToastAsync()
@@ -149,13 +177,17 @@ public class ChartPage : ITradingView
         return Task.CompletedTask;
     }
 
-    public async Task InputTicker(string name)
+    public async Task InputTickerAsync(string name)
     {
-        _tickerInput.SendKeys(name);
+        await WaitAndRefreshAsync(() =>
+        {
+            _tickerInput.SendKeys(name);
+        });
+
         await Task.Delay(3000);
     }
 
-    public async Task RefreshPage()
+    public async Task RefreshPageAsync()
     {
         _webDriver.Navigate().Refresh();
         try
@@ -174,4 +206,18 @@ public class ChartPage : ITradingView
         Screenshot ss = ((ITakesScreenshot)_webDriver).GetScreenshot();
         return ss.AsByteArray;
     }
+
+    private async Task WaitAndRefreshAsync(Action action)
+    {
+        try
+        {
+            action?.Invoke();
+        }
+        catch (WebDriverTimeoutException)
+        {
+            await RefreshPageAsync();
+            action?.Invoke();
+        }
+    }
+
 }
