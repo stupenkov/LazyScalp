@@ -28,11 +28,13 @@ IWebPageFactory webPageFactory = new WebPageFactory(webDriver);
 var chartPage = webPageFactory.Create<ChartPage>();
 await chartPage.LoginAsync("anton87.87@bk.ru", "9e67DFFDSd");
 await chartPage.SetChartTemplateAsync();
-if (await chartPage.IsOpenScreenerAsync())
-    await chartPage.CloseScreenerAsync();
 
-await chartPage.OpenScreenerAsync();
-await chartPage.RefreshPageAsync(); // fix съезжает панель скринира
+if (!await chartPage.IsOpenScreenerAsync())
+{
+    await chartPage.OpenScreenerAsync();
+    await chartPage.RefreshPageAsync(); // fix съезжает панель скринира
+}
+
 await chartPage.UpdateScreenerDataAsync();
 await chartPage.InputTickerAsync("usdt.p");
 int count = await chartPage.CountScreenerInstrumentsAsync();
