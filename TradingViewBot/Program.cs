@@ -61,7 +61,7 @@ for (int i = 0; i < count; i++)
     {
         if (updateCounter > 4)
         {
-            await chartPage.RefreshPageAsync();
+            await RefreshPageAsync();
         }
 
         await Task.Delay(2000);
@@ -129,17 +129,25 @@ for (int i = 0; i < count; i++)
 
 
     var result = await screenshotAnalyzer.HasSignalAsync(financialInstrument.Screenshot);
-    //if (result)
-    //    Console.Beep();
     Console.WriteLine($"index: {i}, name: {financialInstrument.Name}, has signal: {result}");
 
     if (i == count - 1)
     {
         i = -1;
 
-        await chartPage.RefreshPageAsync();
+        await RefreshPageAsync();
         await chartPage.UpdateScreenerDataAsync();
-        await chartPage.InputTickerAsync("usdt.p");
         count = await chartPage.CountScreenerInstrumentsAsync();
     }
+}
+
+async Task RefreshPageAsync()
+{
+    if (!await chartPage.IsOpenScreenerAsync())
+    {
+        await chartPage.OpenScreenerAsync();
+    }
+
+    await chartPage.RefreshPageAsync();
+    await chartPage.InputTickerAsync("usdt.p");
 }

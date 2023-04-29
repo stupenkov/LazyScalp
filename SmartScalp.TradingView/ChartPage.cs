@@ -61,6 +61,10 @@ public class ChartPage : ITradingView
     [AllowNull]
     private IWebElement _screenerUpdateDataButton;
 
+    [FindsBy(How = How.XPath, Using = "//*[@id=\"footer-chart-panel\"]/div[2]/button[1]")]
+    [AllowNull]
+    private IWebElement _togglePanelButton;
+
 
     [FindsBy(How = How.XPath, Using = "/html/body/div[5]/div/div/div/article/button")]
     [AllowNull]
@@ -78,16 +82,13 @@ public class ChartPage : ITradingView
 
     public async Task LoginAsync(string login, string password)
     {
-        await WaitAndRefreshAsync(() =>
-        {
-            _webDriver.Navigate().GoToUrl(PageUrl);
-            _wait.Until(ExpectedConditions.ElementToBeClickable(_humburgerButton)).Click();
-            _wait.Until(ExpectedConditions.ElementToBeClickable(_enterItem)).Click();
-            _wait.Until(ExpectedConditions.ElementToBeClickable(_emailLoginButton)).Click();
-            _emailInput.SendKeys(login);
-            _passwordInput.SendKeys(password);
-            _loginSubmitButton.Click();
-        });
+        _webDriver.Navigate().GoToUrl(PageUrl);
+        _wait.Until(ExpectedConditions.ElementToBeClickable(_humburgerButton)).Click();
+        _wait.Until(ExpectedConditions.ElementToBeClickable(_enterItem)).Click();
+        _wait.Until(ExpectedConditions.ElementToBeClickable(_emailLoginButton)).Click();
+        _emailInput.SendKeys(login);
+        _passwordInput.SendKeys(password);
+        _loginSubmitButton.Click();
 
         await Task.Delay(1000);
     }
@@ -116,46 +117,36 @@ public class ChartPage : ITradingView
         await WaitAndRefreshAsync(_wait.Until(ExpectedConditions.ElementToBeClickable(_closeScreenerButton)).Click);
     }
 
-    public async Task<int> CountScreenerInstrumentsAsync()
+    public Task<int> CountScreenerInstrumentsAsync()
     {
-        int count = 0;
-        await WaitAndRefreshAsync(() =>
-        {
-            count = _screenerInstrumentsTable.FindElements(By.TagName("tr")).Count;
-        });
-
-        return count;
+        return Task.FromResult(_screenerInstrumentsTable.FindElements(By.TagName("tr")).Count);
     }
 
     public async Task SelectInstrumentAsync(int index)
     {
-        await WaitAndRefreshAsync(() =>
-        {
-            var tr = _screenerInstrumentsTable.FindElements(By.TagName("tr"))[index];
-            _wait.Until(ExpectedConditions.ElementToBeClickable(tr)).Click();
-        });
+        var tr = _screenerInstrumentsTable.FindElements(By.TagName("tr"))[index];
+        _wait.Until(ExpectedConditions.ElementToBeClickable(tr)).Click();
+        await Task.Delay(1);
     }
 
     public async Task UpdateScreenerDataAsync()
     {
-        await WaitAndRefreshAsync(_wait.Until(ExpectedConditions.ElementToBeClickable(_screenerUpdateDataButton)).Click);
+        _wait.Until(ExpectedConditions.ElementToBeClickable(_screenerUpdateDataButton)).Click();
+        await Task.Delay(3000);
     }
 
-    public Task<bool> IsOpenScreenerAsync()
+    public async Task<bool> IsOpenScreenerAsync()
     {
-        return Task.FromResult(_screenerUpdateDataButton.Displayed);
+        await Task.Delay(1);
+        return _wait.Until(ExpectedConditions.ElementToBeClickable(_togglePanelButton)).GetAttribute("data-active") == "false";
     }
 
     public async Task<FinancialInstrument> GetInstrumentAsync(int index)
     {
-        string title = string.Empty;
-        byte[] image = Array.Empty<byte>();
-        await WaitAndRefreshAsync(() =>
-        {
-            var tr = _screenerInstrumentsTable.FindElements(By.TagName("tr"))[index];
-            title = tr.FindElement(By.CssSelector("div.tv-screener-table__symbol-container-description > div")).Text;
-            image = TakeScreenshot();
-        });
+        var tr = _screenerInstrumentsTable.FindElements(By.TagName("tr"))[index];
+        string title = tr.FindElement(By.CssSelector("div.tv-screener-table__symbol-container-description > div")).Text;
+        byte[] image = TakeScreenshot();
+        await Task.Delay(1);
 
         return new FinancialInstrument(title, image);
     }
