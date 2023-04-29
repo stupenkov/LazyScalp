@@ -6,6 +6,7 @@ using TradingViewBot;
 
 Console.WriteLine("Starting...");
 
+// set options
 var config = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
     .AddEnvironmentVariables()
@@ -13,18 +14,23 @@ var config = new ConfigurationBuilder()
 
 var imagePreparationOptions = new ImagePreparationOptions();
 config.GetSection("imagePreparation").Bind(imagePreparationOptions);
-var imagePreparation = new ImagePreparation(imagePreparationOptions);
 
 var indicatorOptions = new IndicatorOptions();
 config.GetSection("indicator").Bind(indicatorOptions);
 
+// create servicies
+var dateTimeProvider = new DateTimeProvider();
+var levelAnalyzer = new LevelAnalyzer(dateTimeProvider);
+var imagePreparation = new ImagePreparation(imagePreparationOptions);
 var telegramClient = new TelegramBotClient("6182573890:AAE9eIjdIxc2jdPvxzv_MubCm4LdsxDu8Ew");
 var telegramm = new TelegramBot(telegramClient, "@smartScalpX");
-
 var webDriverFactory = new WebDriverFactory();
 IWebDriver webDriver = webDriverFactory.Create();
 IWebPageFactory webPageFactory = new WebPageFactory(webDriver);
+var screenshotAnalyzer = new ScreenshotAnalyzer(indicatorOptions);
+var instrumentRepository = new MemoryInstrumentRepository();
 
+// main
 var chartPage = webPageFactory.Create<ChartPage>();
 await chartPage.LoginAsync("anton87.87@bk.ru", "9e67DFFDSd");
 await chartPage.SetChartTemplateAsync();
@@ -35,109 +41,105 @@ if (!await chartPage.IsOpenScreenerAsync())
     await chartPage.RefreshPageAsync(); // fix съезжает панель скринира
 }
 
-await chartPage.UpdateScreenerDataAsync();
-await chartPage.InputTickerAsync("usdt.p");
-int count = await chartPage.CountScreenerInstrumentsAsync();
-Console.WriteLine(count);
-var screenshotAnalyzer = new ScreenshotAnalyzer(indicatorOptions);
-var instrumentRepository = new MemoryInstrumentRepository();
-var signalComparer = new SignalComparer();
+await LoopAsync(Init, Loop);
 
-for (int i = 0; i < count; i++)
+async Task<int> Init()
 {
-    try
-    {
-        await chartPage.SelectInstrumentAsync(i);
-    }
-    catch (Exception e)
-    {
-        Console.WriteLine($"index: {i}, {e}");
-        continue;
-    }
-
-    int updateCounter = 0;
+    await RefreshPageAsync();
+    await chartPage.UpdateScreenerDataAsync();
+    int count = await chartPage.CountScreenerInstrumentsAsync();
+    Console.WriteLine(count);
+    return count;
+}
+TimeSpan instrumentLoadDelay = TimeSpan.FromSeconds(3);
+async Task Loop(int counter)
+{
     FinancialInstrument? financialInstrument = null;
-    do
+    await chartPage.SelectInstrumentAsync(counter);
+
+    await RepeatAsync(2, TimeSpan.FromSeconds(1), TimeSpan.Zero, async () =>
     {
-        if (updateCounter > 4)
+        bool success = await RepeatAsync(3, TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(3), async () =>
         {
-            await RefreshPageAsync();
-        }
+            financialInstrument = await chartPage.GetInstrumentAsync(counter);
+            return await screenshotAnalyzer.IndicatorLoadedAsync(financialInstrument!.Screenshot);
+        });
 
-        await Task.Delay(3000);
-        try
-        {
-            financialInstrument = await chartPage.GetInstrumentAsync(i);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"index: {i}, {e}");
-            break;
-        }
-
-        updateCounter++;
-    }
-    while (!await screenshotAnalyzer.IndicatorLoadedAsync(financialInstrument!.Screenshot));
-
-    if (financialInstrument is null)
-        continue;
-
-    var signal = await screenshotAnalyzer.AnalyzeAsync(financialInstrument.Screenshot);
-    var instrument = await instrumentRepository.FindByNameAsync(financialInstrument.Name);
-    var preparatedImage = imagePreparation.Crop(financialInstrument.Screenshot);
-    if (instrument is null)
-    {
-        instrument = new Instrument
-        {
-            Id = 0,
-            Name = financialInstrument.Name,
-            HighLevel = signal.HighLevel,
-            LowLevel = signal.LowLevel,
-            LastUpdate = DateTime.UtcNow
-        };
-
-        await instrumentRepository.AddAsync(instrument);
-        Console.WriteLine($"Add instrument to repo");
-
-        if (await screenshotAnalyzer.HasSignalAsync(financialInstrument.Screenshot))
-            await telegramm.SendAsync(new Telegram.TelegramMessage(preparatedImage, financialInstrument.Name));
-    }
-
-    SignalsType signals = signalComparer.Compare(new Signal(instrument.HighLevel, instrument.LowLevel), signal);
-    if (signals.HasFlag(SignalsType.NewFormationLow | SignalsType.NewFormationHigh))
-    {
-        Console.WriteLine($"New formation");
-        await telegramm.SendAsync(new Telegram.TelegramMessage(preparatedImage, $"{financialInstrument.Name}. Новая формация"));
-        instrument.LowLevel = signal.LowLevel;
-        instrument.HighLevel = signal.HighLevel;
-        instrument.LastUpdate = DateTime.UtcNow;
-    }
-    else if (signals.HasFlag(SignalsType.LowComing | SignalsType.HighComing))
-    {
-        Console.WriteLine($"Coming to level");
-        await telegramm.SendAsync(new Telegram.TelegramMessage(preparatedImage, $"{financialInstrument.Name}. Цена приближается к уровню"));
-        instrument.LowLevel = signal.LowLevel;
-        instrument.HighLevel = signal.HighLevel;
-        instrument.LastUpdate = DateTime.UtcNow;
-    }
-    else if (signals.HasFlag(SignalsType.Repeat) && DateTime.UtcNow > instrument.LastUpdate + TimeSpan.FromMinutes(60))
-    {
-        Console.WriteLine($"Repeat");
-        await telegramm.SendAsync(new Telegram.TelegramMessage(preparatedImage, $"{financialInstrument.Name}. Повтор"));
-        instrument.LastUpdate = DateTime.UtcNow;
-    }
-
-
-    var result = await screenshotAnalyzer.HasSignalAsync(financialInstrument.Screenshot);
-    Console.WriteLine($"index: {i}, name: {financialInstrument.Name}, has signal: {result}");
-
-    if (i == count - 1)
-    {
-        i = -1;
+        if (success)
+            return true;
 
         await RefreshPageAsync();
-        await chartPage.UpdateScreenerDataAsync();
-        count = await chartPage.CountScreenerInstrumentsAsync();
+        return false;
+    });
+
+    if (financialInstrument is null)
+        return;
+
+    Console.WriteLine($"index: {counter}, name: {financialInstrument.Name}");
+
+    byte[] preparatedImage = imagePreparation.Crop(financialInstrument.Screenshot);
+    Signal signal = await screenshotAnalyzer.AnalyzeAsync(financialInstrument.Screenshot);
+    Instrument instrument = await GetInstrumentOrCreate(financialInstrument);
+    ResultOfLevel highResullt = levelAnalyzer.Analyze(instrument.HighLevel, instrument.HighDetectionTime, signal.HighLevel);
+    ResultOfLevel lowResullt = levelAnalyzer.Analyze(instrument.LowLevel, instrument.LowDetectionTime, signal.LowLevel);
+    string messageText = GenerateMessage(financialInstrument, highResullt, lowResullt);
+
+    if (highResullt.SignalType != SignalType.PriceIsFarFromLevel || lowResullt.SignalType != SignalType.PriceIsFarFromLevel)
+    {
+        await telegramm.SendAsync(new Telegram.TelegramMessage(preparatedImage, messageText));
+        Console.WriteLine("Sent to telegram: " + messageText);
+    }
+}
+
+async Task<bool> RepeatAsync(int count, TimeSpan timeout, TimeSpan startDelay, Func<Task<bool>> action)
+{
+    await Task.Delay(startDelay);
+    for (int i = 0; i < count; i++)
+    {
+        bool result = await action.Invoke();
+        if (result)
+            return true;
+
+        await Task.Delay(timeout);
+    }
+
+    return false;
+}
+
+async Task LoopAsync(Func<Task<int>> init, Func<int, Task> loop)
+{
+    int numberOfInstrument = 0;
+    int counter = 0;
+    while (true)
+    {
+        if (counter == 0)
+        {
+            Console.WriteLine("Loop initialization...");
+            try
+            {
+                numberOfInstrument = await init.Invoke();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Loop initialization failed. \n{e}");
+                Console.WriteLine($"Will try again, through 5 sec...");
+                await Task.Delay(5000);
+                continue;
+            }
+        }
+
+        Console.WriteLine($"Loop invoke. Iterator index - {counter}...");
+        try
+        {
+            await loop.Invoke(counter);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Loop invoke failed. /n{ex}");
+            Console.WriteLine($"The iteration skipping.");
+        }
+
+        counter = counter >= numberOfInstrument ? 0 : counter + 1;
     }
 }
 
@@ -150,4 +152,45 @@ async Task RefreshPageAsync()
 
     await chartPage.RefreshPageAsync();
     await chartPage.InputTickerAsync("usdt.p");
+}
+
+async Task<Instrument> GetInstrumentOrCreate(FinancialInstrument financialInstrument)
+{
+    Instrument? instrument = await instrumentRepository.FindByNameAsync(financialInstrument.Name);
+
+    if (instrument is null)
+    {
+        instrument = new Instrument(0, financialInstrument.Name);
+        await instrumentRepository.AddAsync(instrument);
+        Console.WriteLine($"Add instrument to repo");
+    }
+
+    return instrument;
+}
+
+static string GenerateMessage(FinancialInstrument? financialInstrument, ResultOfLevel highResullt, ResultOfLevel lowResullt)
+{
+    string messageText = $"{financialInstrument.Name}. ";
+
+    if (highResullt.SignalType == SignalType.PriceReachedLevel || lowResullt.SignalType == SignalType.PriceReachedLevel)
+    {
+        messageText += "Цена приближается к уровню.";
+    }
+
+    if (highResullt.SignalType == SignalType.PriceApproachedLevel || lowResullt.SignalType == SignalType.PriceApproachedLevel)
+    {
+        messageText += "Цена находиться близко от уровня.";
+    }
+
+    if (highResullt.SignalType == SignalType.PriceIsNearLevel)
+    {
+        messageText += $"Цена находиться возле верхнего уровня {highResullt.NearLevelTime.TotalHours}ч.";
+    }
+
+    if (lowResullt.SignalType == SignalType.PriceIsNearLevel)
+    {
+        messageText += $"Цена находиться возле нижнего уровня {lowResullt.NearLevelTime.TotalHours}ч.";
+    }
+
+    return messageText;
 }
