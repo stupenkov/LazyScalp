@@ -181,6 +181,7 @@ public class ChartPage : ITradingView
     {
         await WaitAndRefreshAsync(() =>
         {
+            _tickerInput.Clear();
             _tickerInput.SendKeys(name);
         });
 
