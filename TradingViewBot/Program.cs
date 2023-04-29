@@ -18,6 +18,8 @@ config.GetSection("imagePreparation").Bind(imagePreparationOptions);
 var indicatorOptions = new IndicatorOptions();
 config.GetSection("indicator").Bind(indicatorOptions);
 
+TimeSpan repeateNotificationTime = TimeSpan.FromMinutes(60);
+
 // create servicies
 var dateTimeProvider = new DateTimeProvider();
 var levelAnalyzer = new LevelAnalyzer(dateTimeProvider);
@@ -51,7 +53,6 @@ async Task<int> Init()
     Console.WriteLine(count);
     return count;
 }
-TimeSpan instrumentLoadDelay = TimeSpan.FromSeconds(3);
 async Task Loop(int counter)
 {
     FinancialInstrument? financialInstrument = null;
@@ -82,12 +83,41 @@ async Task Loop(int counter)
     Instrument instrument = await GetInstrumentOrCreate(financialInstrument);
     ResultOfLevel highResullt = levelAnalyzer.Analyze(instrument.HighLevel, instrument.HighDetectionTime, signal.HighLevel);
     ResultOfLevel lowResullt = levelAnalyzer.Analyze(instrument.LowLevel, instrument.LowDetectionTime, signal.LowLevel);
-    string messageText = GenerateMessage(financialInstrument, highResullt, lowResullt);
 
-    if (highResullt.SignalType != SignalType.PriceIsFarFromLevel || lowResullt.SignalType != SignalType.PriceIsFarFromLevel)
+    bool isNotify = instrument.LastNotification.HasValue && instrument.LastNotification.Value + repeateNotificationTime < dateTimeProvider.GetCurrentTime();
+    string messageText = $"{financialInstrument.Name}. ";
+
+    bool needSend = false;
+    if (highResullt.SignalType == SignalType.PriceReachedLevel || lowResullt.SignalType == SignalType.PriceReachedLevel)
+    {
+        messageText += "Цена приближается к уровню.";
+        needSend = true;
+    }
+    else if (highResullt.SignalType == SignalType.PriceApproachedLevel || lowResullt.SignalType == SignalType.PriceApproachedLevel)
+    {
+        messageText += "Цена находиться близко от уровня.";
+        needSend = true;
+    }
+    else if (isNotify)
+    {
+        if (highResullt.SignalType == SignalType.PriceIsNearLevel)
+        {
+            messageText += $"Цена находиться возле верхнего уровня {highResullt.NearLevelTime.TotalHours}ч.";
+            needSend = true;
+        }
+
+        if (lowResullt.SignalType == SignalType.PriceIsNearLevel)
+        {
+            messageText += $"Цена находиться возле нижнего уровня {lowResullt.NearLevelTime.TotalHours}ч.";
+            needSend = true;
+        }
+    }
+
+    if (needSend)
     {
         await telegramm.SendAsync(new Telegram.TelegramMessage(preparatedImage, messageText));
         Console.WriteLine("Sent to telegram: " + messageText);
+        instrument.LastNotification = dateTimeProvider.GetCurrentTime();
     }
 
     instrument.SetHighLevel(signal.HighLevel, dateTimeProvider.GetCurrentTime());
@@ -169,31 +199,4 @@ async Task<Instrument> GetInstrumentOrCreate(FinancialInstrument financialInstru
     }
 
     return instrument;
-}
-
-static string GenerateMessage(FinancialInstrument? financialInstrument, ResultOfLevel highResullt, ResultOfLevel lowResullt)
-{
-    string messageText = $"{financialInstrument.Name}. ";
-
-    if (highResullt.SignalType == SignalType.PriceReachedLevel || lowResullt.SignalType == SignalType.PriceReachedLevel)
-    {
-        messageText += "Цена приближается к уровню.";
-    }
-
-    if (highResullt.SignalType == SignalType.PriceApproachedLevel || lowResullt.SignalType == SignalType.PriceApproachedLevel)
-    {
-        messageText += "Цена находиться близко от уровня.";
-    }
-
-    if (highResullt.SignalType == SignalType.PriceIsNearLevel)
-    {
-        messageText += $"Цена находиться возле верхнего уровня {highResullt.NearLevelTime.TotalHours}ч.";
-    }
-
-    if (lowResullt.SignalType == SignalType.PriceIsNearLevel)
-    {
-        messageText += $"Цена находиться возле нижнего уровня {lowResullt.NearLevelTime.TotalHours}ч.";
-    }
-
-    return messageText;
 }
