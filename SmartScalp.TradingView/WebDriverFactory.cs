@@ -23,6 +23,7 @@ public class WebDriverFactory : IWebDriverFactory
         options.AddArgument("--start-maximized");
         options.AddArgument("--no-sandbox");
         options.AddArgument("--disable-dev-shm-usage");
+        options.AddArgument("--force-color-profile=srgb");
         options.AddUserProfilePreference("credentials_enable_service", false);
         options.AddUserProfilePreference("rofile.password_manager_enabled", false);
         options.AddArgument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36");
