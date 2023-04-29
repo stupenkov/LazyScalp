@@ -88,9 +88,10 @@ async Task Loop(int counter)
     {
         await telegramm.SendAsync(new Telegram.TelegramMessage(preparatedImage, messageText));
         Console.WriteLine("Sent to telegram: " + messageText);
-        instrument.SetHighLevel(signal.HighLevel, dateTimeProvider.GetCurrentTime());
-        instrument.SetLowLevel(signal.LowLevel, dateTimeProvider.GetCurrentTime());
     }
+
+    instrument.SetHighLevel(signal.HighLevel, dateTimeProvider.GetCurrentTime());
+    instrument.SetLowLevel(signal.LowLevel, dateTimeProvider.GetCurrentTime());
 }
 
 async Task<bool> RepeatAsync(int count, TimeSpan timeout, TimeSpan startDelay, Func<Task<bool>> action)
