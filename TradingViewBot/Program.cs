@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using OpenQA.Selenium;
 using SmartScalp.TradingView;
 using Telegram.Bot;
@@ -7,12 +9,8 @@ using TradingViewBot;
 Console.WriteLine("Starting...");
 
 // set options
-var enviroment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
-var config = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json", false, true)
-    .AddJsonFile($"appsettings.{enviroment}.json", true, true)
-    .AddEnvironmentVariables()
-    .Build();
+using IHost host = Host.CreateDefaultBuilder(args).Build();
+IConfiguration config = host.Services.GetRequiredService<IConfiguration>();
 
 var imagePreparationOptions = new ImagePreparationOptions();
 config.GetSection("imagePreparation").Bind(imagePreparationOptions);
@@ -20,14 +18,20 @@ config.GetSection("imagePreparation").Bind(imagePreparationOptions);
 var indicatorOptions = new IndicatorOptions();
 config.GetSection("indicator").Bind(indicatorOptions);
 
+var tradingViewOptions = new TradingViewOptions();
+config.GetSection("TradingView").Bind(tradingViewOptions);
+
+var telegramBotOptions = new TelegramBotOptions();
+config.GetSection("TelegramBot").Bind(telegramBotOptions);
+
 TimeSpan repeateNotificationTime = TimeSpan.FromMinutes(60);
 
 // create servicies
 var dateTimeProvider = new DateTimeProvider();
 var levelAnalyzer = new LevelAnalyzer(dateTimeProvider);
 var imagePreparation = new ImagePreparation(imagePreparationOptions);
-var telegramClient = new TelegramBotClient("6182573890:AAE9eIjdIxc2jdPvxzv_MubCm4LdsxDu8Ew");
-var telegramm = new TelegramBot(telegramClient, "@smartScalpX");
+var telegramClient = new TelegramBotClient(telegramBotOptions.Token!);
+var telegramm = new TelegramBot(telegramClient, telegramBotOptions.ChatId!);
 var webDriverFactory = new WebDriverFactory();
 IWebDriver webDriver = webDriverFactory.Create();
 IWebPageFactory webPageFactory = new WebPageFactory(webDriver);
@@ -36,7 +40,7 @@ var instrumentRepository = new MemoryInstrumentRepository();
 
 // main
 var chartPage = webPageFactory.Create<ChartPage>();
-await chartPage.LoginAsync("anton87.87@bk.ru", "9e67DFFDSd");
+await chartPage.LoginAsync(tradingViewOptions.Login!, tradingViewOptions.Password!);
 await chartPage.SetChartTemplateAsync();
 
 if (!await chartPage.IsOpenScreenerAsync())
@@ -202,3 +206,5 @@ async Task<Instrument> GetInstrumentOrCreate(FinancialInstrument financialInstru
 
     return instrument;
 }
+
+await host.RunAsync();
