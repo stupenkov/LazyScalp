@@ -104,13 +104,13 @@ async Task Loop(int counter)
     {
         if (highResullt.SignalType == SignalType.PriceIsNearLevel)
         {
-            messageText += $"Цена находиться возле верхнего уровня {highResullt.NearLevelTime.TotalHours}ч.";
+            messageText += $"Цена находиться возле верхнего уровня {(int)highResullt.NearLevelTime.TotalHours}ч.";
             needSend = true;
         }
 
         if (lowResullt.SignalType == SignalType.PriceIsNearLevel)
         {
-            messageText += $"Цена находиться возле нижнего уровня {lowResullt.NearLevelTime.TotalHours}ч.";
+            messageText += $"Цена находиться возле нижнего уровня {(int)lowResullt.NearLevelTime.TotalHours}ч.";
             needSend = true;
         }
     }
