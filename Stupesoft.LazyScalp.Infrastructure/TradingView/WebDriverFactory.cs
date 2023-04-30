@@ -5,7 +5,7 @@ using WebDriverManager;
 
 namespace Stupesoft.LazyScalp.Infrastructure.TradingView;
 
-public class WebDriverFactory : IWebDriverFactory
+public class WebDriverFactory : IWebDriverFactory, IDisposable
 {
     private static IWebDriver? _webDriver;
 
@@ -39,5 +39,11 @@ public class WebDriverFactory : IWebDriverFactory
         _webDriver.Manage().Window.Size = new(1980, 980);
         _webDriver.Manage().Window.Position = new(0, 0);
         return _webDriver;
+    }
+
+    public void Dispose()
+    {
+        _webDriver?.Dispose();
+        _webDriver = null;
     }
 }
