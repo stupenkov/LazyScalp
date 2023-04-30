@@ -75,10 +75,11 @@ public class ChartPage : ITradingView
     [AllowNull]
     private IWebElement _tickerInput;
 
-    public ChartPage(IWebDriver webDriver)
+    public ChartPage(IWebDriverFactory webDriverFactory)
     {
-        _webDriver = webDriver;
+        _webDriver = webDriverFactory.Create();
         _wait = new WebDriverWait(_webDriver, TimeSpan.FromSeconds(10));
+        PageFactory.InitElements(_webDriver, this);
     }
 
     public async Task LoginAsync(string login, string password)

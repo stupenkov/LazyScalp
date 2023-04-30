@@ -1,4 +1,5 @@
-﻿using SkiaSharp;
+﻿using Microsoft.Extensions.Options;
+using SkiaSharp;
 using Stupesoft.LazeScallp.Application.Abstractions;
 using Stupesoft.LazeScallp.Application.Configurations;
 using System.Drawing;
@@ -14,14 +15,15 @@ public class ScreenshotAnalyzer : IScreenshotAnalyzer
     private SKColor _successColor = new(85, 148, 74);
     private SKColor _dangerColor = new(159, 57, 52);
 
-    public ScreenshotAnalyzer(IndicatorOptions indicatorOptions)
+    public ScreenshotAnalyzer(IOptions<IndicatorOptions> indicatorOptions)
     {
-        _highLevel = new(indicatorOptions.HighLevelPosition!.X, indicatorOptions.HighLevelPosition!.Y);
-        _lowLevel = new(indicatorOptions.LowLevelPosition!.X, indicatorOptions.LowLevelPosition!.Y);
-        _defaultColor = SKColor.Parse(indicatorOptions.DefaultColor);
-        _warningColor = SKColor.Parse(indicatorOptions.WarningColor);
-        _successColor = SKColor.Parse(indicatorOptions.SuccessColor);
-        _defaultColor = SKColor.Parse(indicatorOptions.DefaultColor);
+        IndicatorOptions options = indicatorOptions.Value;
+        _highLevel = new(options.HighLevelPosition!.X, options.HighLevelPosition!.Y);
+        _lowLevel = new(options.LowLevelPosition!.X, options.LowLevelPosition!.Y);
+        _defaultColor = SKColor.Parse(options.DefaultColor);
+        _warningColor = SKColor.Parse(options.WarningColor);
+        _successColor = SKColor.Parse(options.SuccessColor);
+        _defaultColor = SKColor.Parse(options.DefaultColor);
     }
 
     public Task<Signal> AnalyzeAsync(byte[] image)

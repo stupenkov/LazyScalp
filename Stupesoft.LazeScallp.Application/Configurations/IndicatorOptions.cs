@@ -2,6 +2,7 @@
 
 public class IndicatorOptions
 {
+    public const string Indicator = "indicator";
     public ImagePoint? HighLevelPosition { get; set; }
     public ImagePoint? LowLevelPosition { get; set; }
     public string? DefaultColor { get; set; }

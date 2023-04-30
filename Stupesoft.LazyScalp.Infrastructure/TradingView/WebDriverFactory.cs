@@ -7,8 +7,13 @@ namespace Stupesoft.LazyScalp.Infrastructure.TradingView;
 
 public class WebDriverFactory : IWebDriverFactory
 {
+    private static IWebDriver? _webDriver;
+
     public IWebDriver Create()
     {
+        if (_webDriver != null)
+            return _webDriver;
+
         new DriverManager().SetUpDriver(new ChromeConfig());
 
         var service = ChromeDriverService.CreateDefaultService();
@@ -27,12 +32,12 @@ public class WebDriverFactory : IWebDriverFactory
         options.AddUserProfilePreference("credentials_enable_service", false);
         options.AddUserProfilePreference("rofile.password_manager_enabled", false);
         options.AddArgument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36");
-        IWebDriver webDriver = new ChromeDriver(service, options);
-        webDriver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(30);
-        webDriver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
-        webDriver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(30);
-        webDriver.Manage().Window.Size = new(1980, 980);
-        webDriver.Manage().Window.Position = new(0, 0);
-        return webDriver;
+        _webDriver = new ChromeDriver(service, options);
+        _webDriver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(30);
+        _webDriver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
+        _webDriver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(30);
+        _webDriver.Manage().Window.Size = new(1980, 980);
+        _webDriver.Manage().Window.Position = new(0, 0);
+        return _webDriver;
     }
 }

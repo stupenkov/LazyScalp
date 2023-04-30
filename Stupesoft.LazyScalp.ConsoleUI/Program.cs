@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using OpenQA.Selenium;
 using Stupesoft.LazeScallp.Application.Abstractions;
 using Stupesoft.LazeScallp.Application.Configurations;
 using Stupesoft.LazeScallp.Application.Servicies;
@@ -10,44 +9,45 @@ using Stupesoft.LazyScalp.Infrastructure;
 using Stupesoft.LazyScalp.Infrastructure.Repositories;
 using Stupesoft.LazyScalp.Infrastructure.Telegram;
 using Stupesoft.LazyScalp.Infrastructure.TradingView;
-using Telegram.Bot;
 
 Console.WriteLine("Starting...");
 
-// set options
-using IHost host = Host.CreateDefaultBuilder(args).Build();
+// create host
+using IHost host = Host.CreateDefaultBuilder(args)
+    .ConfigureServices((hostContext, services) => services
+        .AddOptions()
+        .Configure<ImagePreparationOptions>(hostContext.Configuration.GetSection(ImagePreparationOptions.ImagePreparation))
+        .Configure<IndicatorOptions>(hostContext.Configuration.GetSection(IndicatorOptions.Indicator))
+        .Configure<TelegramBotOptions>(hostContext.Configuration.GetSection(TelegramBotOptions.TelegramBot))
+        .Configure<TradingViewOptions>(hostContext.Configuration.GetSection(TradingViewOptions.TradingView))
+        .AddSingleton<IInstrumentRepository, MemoryInstrumentRepository>()
+        .AddSingleton<IDateTimeProvider, DateTimeProvider>()
+        .AddSingleton<IImagePreparation, ImagePreparation>()
+        .AddSingleton<INotification, TelegramBot>()
+        .AddSingleton<ILevelAnalyzer, LevelAnalyzer>()
+        .AddSingleton<IScreenshotAnalyzer, ScreenshotAnalyzer>()
+        .AddSingleton<ITradingView, ChartPage>()
+        .AddSingleton<IWebDriverFactory, WebDriverFactory>()
+        .AddSingleton<ITelegarmClientBotFactory, TelegramClientBotFactory>())
+    .Build();
+
 IConfiguration config = host.Services.GetRequiredService<IConfiguration>();
-
-var imagePreparationOptions = new ImagePreparationOptions();
-config.GetSection("imagePreparation").Bind(imagePreparationOptions);
-
-var indicatorOptions = new IndicatorOptions();
-config.GetSection("indicator").Bind(indicatorOptions);
-
-var tradingViewOptions = new TradingViewOptions();
-config.GetSection("TradingView").Bind(tradingViewOptions);
-
-var telegramBotOptions = new TelegramBotOptions();
-config.GetSection("TelegramBot").Bind(telegramBotOptions);
-
+TradingViewOptions tradingViewOptions = config.GetSection(TradingViewOptions.TradingView).Get<TradingViewOptions>()!;
 TimeSpan repeateNotificationTime = TimeSpan.FromMinutes(60);
 
-// create servicies
-var dateTimeProvider = new DateTimeProvider();
-var levelAnalyzer = new LevelAnalyzer(dateTimeProvider);
-var imagePreparation = new ImagePreparation(imagePreparationOptions);
-var telegramClient = new TelegramBotClient(telegramBotOptions.Token!);
-var telegramm = new TelegramBot(telegramClient, telegramBotOptions.ChatId!);
-var webDriverFactory = new WebDriverFactory();
-IWebDriver webDriver = webDriverFactory.Create();
-IWebPageFactory webPageFactory = new WebPageFactory(webDriver);
-var screenshotAnalyzer = new ScreenshotAnalyzer(indicatorOptions);
-var instrumentRepository = new MemoryInstrumentRepository();
+// get servicies
+var dateTimeProvider = host.Services.GetRequiredService<IDateTimeProvider>();
+var levelAnalyzer = host.Services.GetRequiredService<ILevelAnalyzer>();
+var imagePreparation = host.Services.GetRequiredService<IImagePreparation>();
+var telegramm = host.Services.GetService<INotification>();
+var screenshotAnalyzer = host.Services.GetRequiredService<IScreenshotAnalyzer>();
+var instrumentRepository = host.Services.GetRequiredService<IInstrumentRepository>();
+var chartPage = host.Services.GetRequiredService<ITradingView>();
 
 // main
-var chartPage = webPageFactory.Create<ChartPage>();
 await chartPage.LoginAsync(tradingViewOptions.Login!, tradingViewOptions.Password!);
 await chartPage.SetChartTemplateAsync();
+
 
 if (!await chartPage.IsOpenScreenerAsync())
 {
@@ -215,4 +215,3 @@ async Task<Instrument> GetInstrumentOrCreate(FinancialInstrument financialInstru
     return instrument;
 }
 
-await host.RunAsync();

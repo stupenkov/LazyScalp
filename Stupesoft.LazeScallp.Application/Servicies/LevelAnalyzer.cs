@@ -2,7 +2,7 @@
 
 namespace Stupesoft.LazeScallp.Application.Servicies;
 
-public class LevelAnalyzer
+public class LevelAnalyzer : ILevelAnalyzer
 {
     private IDateTimeProvider _dateTimeProvider;
 
