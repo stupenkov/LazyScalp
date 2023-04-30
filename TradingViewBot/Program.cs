@@ -178,7 +178,9 @@ async Task LoopAsync(Func<Task<int>> init, Func<int, Task> loop)
             Console.WriteLine($"The iteration skipping.");
         }
 
-        counter = counter >= numberOfInstrument ? 0 : counter + 1;
+        counter = counter >= numberOfInstrument - 1
+            ? 0
+            : counter + 1;
     }
 }
 
