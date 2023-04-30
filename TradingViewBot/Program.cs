@@ -7,8 +7,10 @@ using TradingViewBot;
 Console.WriteLine("Starting...");
 
 // set options
+var enviroment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
 var config = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json")
+    .AddJsonFile("appsettings.json", false, true)
+    .AddJsonFile($"appsettings.{enviroment}.json", true, true)
     .AddEnvironmentVariables()
     .Build();
 
