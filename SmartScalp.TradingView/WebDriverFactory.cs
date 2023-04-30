@@ -20,7 +20,7 @@ public class WebDriverFactory : IWebDriverFactory
         options.AddExcludedArgument("enable-automation");
         options.AddArgument("--disable-web-security");
         options.AddArgument("--allow-running-insecure-content");
-        options.AddArgument("--start-maximized");
+        //options.AddArgument("--start-maximized");
         options.AddArgument("--no-sandbox");
         options.AddArgument("--disable-dev-shm-usage");
         options.AddArgument("--force-color-profile=srgb");
@@ -31,6 +31,8 @@ public class WebDriverFactory : IWebDriverFactory
         webDriver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(30);
         webDriver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
         webDriver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(30);
+        webDriver.Manage().Window.Size = new(1980, 980);
+        webDriver.Manage().Window.Position = new(0, 0);
         return webDriver;
     }
 }
