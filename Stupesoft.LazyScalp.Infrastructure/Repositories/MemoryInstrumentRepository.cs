@@ -24,14 +24,14 @@ public class MemoryInstrumentRepository : IInstrumentRepository
         return Task.CompletedTask;
     }
 
-    public Task<Instrument> GetAsync(int id)
+    public Task<Instrument> FindAsync(int id)
     {
         return Task.FromResult(_instruments.Single(x => x.Id == id));
     }
 
-    public Task<Instrument?> FindByNameAsync(string name)
+    public Task<Instrument> FindByNameAsync(string name)
     {
-        return Task.FromResult(_instruments.SingleOrDefault(x => x.Name == name));
+        return Task.FromResult(_instruments.Single(x => x.Name == name));
     }
 
     public Task UpdateAsync(Instrument instrument)
