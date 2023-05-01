@@ -108,20 +108,20 @@ public class MainHostedService : BackgroundService
             }
             else if (highResullt.SignalType == SignalType.PriceApproachedLevel || lowResullt.SignalType == SignalType.PriceApproachedLevel)
             {
-                messageText += "Цена находиться близко от уровня.";
+                messageText += "Цена находится близко от уровня.";
                 needSend = true;
             }
             else if (isNotify)
             {
                 if (highResullt.SignalType == SignalType.PriceIsNearLevel)
                 {
-                    messageText += $"Цена находиться возле верхнего уровня {(int)highResullt.NearLevelTime.TotalHours}ч.";
+                    messageText += $"Цена находится возле верхнего уровня {(int)highResullt.NearLevelTime.TotalHours}ч.";
                     needSend = true;
                 }
 
                 if (lowResullt.SignalType == SignalType.PriceIsNearLevel)
                 {
-                    messageText += $"Цена находиться возле нижнего уровня {(int)lowResullt.NearLevelTime.TotalHours}ч.";
+                    messageText += $"Цена находится возле нижнего уровня {(int)lowResullt.NearLevelTime.TotalHours}ч.";
                     needSend = true;
                 }
             }
