@@ -1,24 +1,29 @@
-// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
-// � anton8787
+﻿// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © anton8787
 
 //@version=5
 indicator("HLevel 2.0", overlay = true, max_lines_count = 50)
 
+// H1
 int h1Width = input.int(defval =  1, title =  "Width", minval =  1, maxval =  10, step =  1, inline="h1Style", group = "H1")
 color h1Color = input.color(defval = #3179f5, title =  "Color line H1",  inline="h1Style", group = "H1")
 float lineSpacingError = input.float(defval = 0.2, title = "Line spacing error, %", group = "H1") / 100
 
+// D1
 int d1Width = input.int(defval =  2, title =  "Width", minval =  1, maxval =  10, step =  1, inline="d1Style", group = "D1")
 color d1Color = input.color(defval = color.lime, title =  "Color line D1",  inline="d1Style", group = "D1")
 
 int timeToRemoveLine = input.int(defval =  60, title =  "Time to remove line, min", minval =  1, step =  1, group = "common") * 60
 int nearLevelCoef = input.int(defval =  10, title =  "Near level coefficient", step =  1, group = "common") 
-float maxLevelDistanceCoef = input.float(defval =  1.5, title =  "Max level distance coefficient", step =  0.01, group = "common") 
+float maxLevelDistanceCoef = input.float(defval =  1.0, title =  "Max level distance coefficient", step =  0.01, group = "common") 
 int dayVolumeLimit = input.int(defval =  100, title =  "Day volume limit, million", step =  1, group = "common") * 1000000
 color brakeLevelColor = input.color(defval = color.gray, title = "Brake level color", group = "common")
 
-bool showAdditionalInfo = input.bool(defval = true, title = "Show additional info", group = "visual")
+float firstDistanceLevelCoef = input.float(defval = 1, title = "Distance first level coefficient")
+float secondDistanceLevelCoef = input.float(defval = 2, title = "Distance first level coefficient")
 
+bool showAdditionalInfo = input.bool(defval = true, title = "Show additional info", group = "visual")
+bool showDebugInfo = input.bool(defval = false, title = "Show debug info", group = "visual")
 
 var lineTransparent = 80
 var c_highLevel = 'highLevel'
@@ -254,7 +259,7 @@ while array.size(levelLines) > counter
 var table panel = table.new(
   position = position.top_right,
   columns = 4,
-  rows = 10,
+  rows = 20,
   bgcolor = tableBgColor
   )
 
@@ -262,51 +267,54 @@ var color textColor = color.white
 color bgColorH = na
 color bgColorL = na
 if barstate.islast
-    if showAdditionalInfo
-        table.cell(table_id = panel, column = 1, row = 0, text = "AVG day ATR", text_color = textColor)
-        table.cell(table_id = panel, column = 2, row = 0, text = str.tostring(math.round_to_mintick(atrD1)), text_color = textColor)
-
-        table.cell(table_id = panel, column = 1, row = 1, text = "Volatility, %", text_color = textColor)
-        table.cell(table_id = panel, column = 2, row = 1, text = str.tostring(math.round(volatility * 100, 2)), text_color = textColor)
-
-        table.cell(table_id = panel, column = 1, row = 2, text = "Max. dist. to lvl", text_color = textColor)
-        table.cell(table_id = panel, column = 2, row = 2, text = str.tostring(math.round_to_mintick(maxDistance)), text_color = textColor)
-
     color dayVolumeColor = dayVolNumber > dayVolumeLimit ? color.rgb(60, 150, 63) : color.rgb(173, 47, 47)
-    table.cell(table_id = panel, column = 0, row = 3, text = "??", text_color = textColor, bgcolor = dayVolumeColor)
-    table.cell(table_id = panel, column = 1, row = 3, text = "Day volume", text_color = textColor, bgcolor = dayVolumeColor)
-    table.cell(table_id = panel, column = 2, row = 3, text = dayVol, text_color = textColor, bgcolor = dayVolumeColor)
-    table.cell(table_id = panel, column = 3, row = 3, text = "          ", bgcolor = dayVolumeColor)
+    table.cell(table_id = panel, column = 0, row = 1, text = "📶", text_color = textColor, bgcolor = dayVolumeColor)
+    table.cell(table_id = panel, column = 1, row = 1, text = "Day volume", text_color = textColor, bgcolor = dayVolumeColor)
+    table.cell(table_id = panel, column = 2, row = 1, text = dayVol, text_color = textColor, bgcolor = dayVolumeColor)
+    table.cell(table_id = panel, column = 3, row = 1, text = "          ", bgcolor = dayVolumeColor)
 
     float closeHighPercent = math.round(closeHigh * 100, 2)
     string closeHighText = closeHighPercent > 100 ? "-" : str.tostring(closeHighPercent) + "%"
-    bgColorH := if closeHigh < volatility * 2
+    bgColorH := if closeHigh < volatility * firstDistanceLevelCoef
         successTableColor
-    else if closeHigh < volatility * 5
+    else if closeHigh < volatility * secondDistanceLevelCoef
         middleTableColor
     else 
         na
-    table.cell(table_id = panel, column = 0, row = 4, text = "??", text_color = textColor, bgcolor = bgColorH)
-    table.cell(table_id = panel, column = 1, row = 4, text = "Strong high", text_color = textColor, bgcolor = bgColorH, width = 7)
-    table.cell(table_id = panel, column = 2, row = 4, text = closeHighText, text_color = textColor, bgcolor = bgColorH, width = 4)
-    table.cell(table_id = panel, column = 3, row = 4, bgcolor = bgColorH)
+    table.cell(table_id = panel, column = 0, row = 2, text = "🔼", text_color = textColor, bgcolor = bgColorH)
+    table.cell(table_id = panel, column = 1, row = 2, text = "Strong high", text_color = textColor, bgcolor = bgColorH, width = 7)
+    table.cell(table_id = panel, column = 2, row = 2, text = closeHighText, text_color = textColor, bgcolor = bgColorH, width = 4)
+    table.cell(table_id = panel, column = 3, row = 2, bgcolor = bgColorH)
 
     float closeLowPercent = math.round(closeLow * 100, 2)
     string closeLowText = closeLowPercent > 100 ? "-" : str.tostring(closeLowPercent) + "%"
-    bgColorL := if closeLow < volatility * 2
+    bgColorL := if closeLow < volatility * firstDistanceLevelCoef
         successTableColor
-    else if closeLow < volatility * 5
+    else if closeLow < volatility * secondDistanceLevelCoef
         middleTableColor
     else 
         na
-    table.cell(table_id = panel, column = 0, row = 5, text = "??", text_color = textColor, bgcolor = bgColorL)
-    table.cell(table_id = panel, column = 1, row = 5, text = "Strong low", text_color = textColor, bgcolor = bgColorL)
-    table.cell(table_id = panel, column = 2, row = 5, text = closeLowText, text_color = textColor, bgcolor = bgColorL)
-    table.cell(table_id = panel, column = 3, row = 5, bgcolor = bgColorL)    
+    table.cell(table_id = panel, column = 0, row = 3, text = "🔽", text_color = textColor, bgcolor = bgColorL)
+    table.cell(table_id = panel, column = 1, row = 3, text = "Strong low", text_color = textColor, bgcolor = bgColorL)
+    table.cell(table_id = panel, column = 2, row = 3, text = closeLowText, text_color = textColor, bgcolor = bgColorL)
+    table.cell(table_id = panel, column = 3, row = 3, bgcolor = bgColorL)    
     
-    // debug info
-    // table.cell(table_id = panel, column = 0, row = 9, text = "Debug", bgcolor = color.aqua)
-    // table.cell(table_id = panel, column = 1, row = 9, text = str.tostring(closeHighPercent), bgcolor = color.aqua)
+    if showAdditionalInfo
+        table.cell(table_id = panel, column = 1, row = 4, text = "AVG day ATR", text_color = textColor)
+        table.cell(table_id = panel, column = 2, row = 4, text = str.tostring(math.round_to_mintick(atrD1)), text_color = textColor)
+
+        table.cell(table_id = panel, column = 1, row = 5, text = "Volatility, %", text_color = textColor)
+        table.cell(table_id = panel, column = 2, row = 5, text = str.tostring(math.round(volatility * 100, 2)), text_color = textColor)
+
+        table.cell(table_id = panel, column = 1, row = 6, text = "Max. dist. to lvl", text_color = textColor)
+        table.cell(table_id = panel, column = 2, row = 6, text = str.tostring(math.round_to_mintick(maxDistance)), text_color = textColor)
+
+    if showDebugInfo
+        table.cell(table_id = panel, column = 0, row = 7, text = "firstDistanceLevel", bgcolor = color.aqua)
+        table.cell(table_id = panel, column = 1, row = 7, text = str.tostring(math.round(volatility * firstDistanceLevelCoef * 100, 2)), bgcolor = color.aqua)
+        
+        table.cell(table_id = panel, column = 0, row = 8, text = "secondDistanceLevel", bgcolor = color.aqua)
+        table.cell(table_id = panel, column = 1, row = 8, text = str.tostring(math.round(volatility * secondDistanceLevelCoef * 100, 2)), bgcolor = color.aqua)
 
 //====================================================================================
 // Level power panel
@@ -367,13 +375,13 @@ if barstate.islast
     table.cell(table_id = descPanel, column = 0, row = 1, text = "Strong local level", text_halign = text.align_right, text_color = textColor)
     table.cell(table_id = descPanel, column = 1, row = 1, bgcolor = h1Color)
     
-    table.cell(table_id = descPanel, column = 0, row = 2, text = "Weak local level", text_halign = text.align_right, text_color = textColor)
+    table.cell(table_id = descPanel, column = 0, row = 2, text = "Local extremum", text_halign = text.align_right, text_color = textColor)
     table.cell(table_id = descPanel, column = 1, row = 2, bgcolor = color.new(h1Color, lineTransparent))
 
     table.cell(table_id = descPanel, column = 0, row = 3, text = "Strong global level", text_halign = text.align_right, text_color = textColor)
     table.cell(table_id = descPanel, column = 1, row = 3, bgcolor = d1Color)
 
-    table.cell(table_id = descPanel, column = 0, row = 4, text = "Weak global level", text_halign = text.align_right, text_color = textColor)
+    table.cell(table_id = descPanel, column = 0, row = 4, text = "Global extremum", text_halign = text.align_right, text_color = textColor)
     table.cell(table_id = descPanel, column = 1, row = 4, bgcolor = color.new(d1Color, lineTransparent))
 
     table.cell(table_id = descPanel, column = 0, row = 5, text = "Brake level", text_halign = text.align_right, text_color = textColor)
