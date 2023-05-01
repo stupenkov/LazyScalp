@@ -9,7 +9,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stupesoft.LazyScalp.Domain"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stupesoft.LazyScalp.ConsoleUI", "Stupesoft.LazyScalp.ConsoleUI\Stupesoft.LazyScalp.ConsoleUI.csproj", "{F4F56237-B7AE-463E-AB1D-DDA7630C01D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stupesoft.LazeScallp.Application", "Stupesoft.LazeScallp.Application\Stupesoft.LazeScallp.Application.csproj", "{90235886-BB77-4027-94E3-B39E9B7093BF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stupesoft.LazeScallp.Application", "Stupesoft.LazeScallp.Application\Stupesoft.LazeScallp.Application.csproj", "{90235886-BB77-4027-94E3-B39E9B7093BF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Indicator", "Indicator", "{68CF155F-0E01-4EDB-838C-5A7E24DDBE23}"
+	ProjectSection(SolutionItems) = preProject
+		Indicator\HLevel.pine = Indicator\HLevel.pine
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
