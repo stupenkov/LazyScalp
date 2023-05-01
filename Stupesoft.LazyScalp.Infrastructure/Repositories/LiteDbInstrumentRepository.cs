@@ -1,41 +1,57 @@
-﻿//using LiteDB;
-//using Stupesoft.LazyScalp.Domain.Instrument;
+﻿using LiteDB;
+using LiteDB.Async;
+using Microsoft.Extensions.Configuration;
+using Stupesoft.LazyScalp.Domain.Instrument;
 
-//namespace Stupesoft.LazyScalp.Infrastructure.Repositories;
+namespace Stupesoft.LazyScalp.Infrastructure.Repositories;
 
-//public class LiteDbOptions
-//{
-//    public string? ConnectionString { get; set; }
-//}
+public class LiteDbInstrumentRepository : IInstrumentRepository
+{
+    private readonly IConfiguration _configuration;
 
-//public class LiteDbInstrumentRepository : IInstrumentRepository
-//{
+    public LiteDbInstrumentRepository(IConfiguration configuration)
+    {
+        _configuration = configuration;
 
-//    public LiteDbInstrumentRepository()
-//    {
-//        new LiteDatabase()
-//    }
+    }
 
-//    public Task AddAsync(Instrument instrument)
-//    {
+    private string ConnectionString => _configuration.GetConnectionString("App")!;
 
-//    }
+    public async Task AddAsync(Instrument instrument)
+    {
+        using var db = new LiteDatabaseAsync(ConnectionString);
+        var collection = db.GetCollection<Instrument>();
+        await collection.EnsureIndexAsync(x => x.Name, true);
+        await collection.UpsertAsync(instrument);
+    }
 
-//    public Task DeleteAsync(int id)
-//    {
+    public async Task DeleteAsync(int id)
+    {
+        using var db = new LiteDatabaseAsync(ConnectionString);
+        var collection = db.GetCollection<Instrument>();
+        await collection.DeleteAsync(new BsonValue(id));
+    }
 
-//    }
+    public async Task<Instrument> FindAsync(int id)
+    {
+        using var db = new LiteDatabaseAsync(ConnectionString);
+        var collection = db.GetCollection<Instrument>();
+        return await collection.FindByIdAsync(new BsonValue(id));
+    }
 
-//    public Task<Instrument> GetAsync(int id)
-//    {
-//    }
+    public async Task<Instrument> FindByNameAsync(string name)
+    {
+        using var db = new LiteDatabaseAsync(ConnectionString);
+        var collection = db.GetCollection<Instrument>();
+        await collection.EnsureIndexAsync(x => x.Name);
+        return await collection.FindOneAsync(x => x.Name == name);
+    }
 
-//    public Task<Instrument?> FindByNameAsync(string name)
-//    {
-//    }
-
-//    public Task UpdateAsync(Instrument instrument)
-//    {
-//    }
-//}
+    public async Task UpdateAsync(Instrument instrument)
+    {
+        using var db = new LiteDatabaseAsync(ConnectionString);
+        var collection = db.GetCollection<Instrument>();
+        await collection.UpdateAsync(instrument);
+    }
+}
 

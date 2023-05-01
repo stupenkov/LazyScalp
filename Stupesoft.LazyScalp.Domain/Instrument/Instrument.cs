@@ -11,7 +11,7 @@ public class Instrument
         Name = name;
     }
 
-    public int Id { get; }
+    public int Id { get; private set; }
     public string Name { get; }
     public int HighLevel { get; private set; }
     public int LowLevel { get; private set; }

@@ -136,6 +136,7 @@ public class MainHostedService : BackgroundService
 
             instrument.SetHighLevel(signal.HighLevel, _dateTimeProvider.GetCurrentTime());
             instrument.SetLowLevel(signal.LowLevel, _dateTimeProvider.GetCurrentTime());
+            await _instrumentRepository.UpdateAsync(instrument);
         }
 
 
