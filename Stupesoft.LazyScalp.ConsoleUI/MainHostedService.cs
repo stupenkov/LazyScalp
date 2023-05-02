@@ -5,37 +5,41 @@ using Stupesoft.LazeScallp.Application.Abstractions;
 using Stupesoft.LazeScallp.Application.Configurations;
 using Stupesoft.LazeScallp.Application.Servicies;
 using Stupesoft.LazyScalp.Domain.Instrument;
+using Stupesoft.LazyScalp.Domain.Notification;
 
 namespace Stupesoft.LazyScalp.ConsoleUI;
 public class MainHostedService : BackgroundService
 {
     private readonly IDateTimeProvider _dateTimeProvider;
-    private readonly ILevelAnalyzer _levelAnalyzer;
+    private readonly ISignalAnalyser _signalAnalyser;
     private readonly IImagePreparation _imagePreparation;
     private readonly INotification _notification;
     private readonly IScreenshotAnalyzer _screenshotAnalyzer;
     private readonly IInstrumentRepository _instrumentRepository;
+    private readonly INotificaitonRepository _notificaitonRepository;
     private readonly ITradingView _tradingView;
     private readonly IOptions<TradingViewOptions> _tradingVeiwOptions;
     private readonly ILogger<MainHostedService> _logger;
 
     public MainHostedService(
         IDateTimeProvider dateTimeProvider,
-        ILevelAnalyzer levelAnalyzer,
+        ISignalAnalyser signalAnalyser,
         IImagePreparation imagePreparation,
         INotification notification,
         IScreenshotAnalyzer screenshotAnalyzer,
         IInstrumentRepository instrumentRepository,
+        INotificaitonRepository notificaitonRepository,
         ITradingView tradingView,
         IOptions<TradingViewOptions> tradingVeiwOptions,
         ILogger<MainHostedService> logger)
     {
         _dateTimeProvider = dateTimeProvider;
-        _levelAnalyzer = levelAnalyzer;
+        _signalAnalyser = signalAnalyser;
         _imagePreparation = imagePreparation;
         _notification = notification;
         _screenshotAnalyzer = screenshotAnalyzer;
         _instrumentRepository = instrumentRepository;
+        _notificaitonRepository = notificaitonRepository;
         _tradingView = tradingView;
         _tradingVeiwOptions = tradingVeiwOptions;
         _logger = logger;
@@ -94,55 +98,56 @@ public class MainHostedService : BackgroundService
             byte[] preparatedImage = _imagePreparation.Crop(financialInstrument.Screenshot);
             Signal signal = await _screenshotAnalyzer.AnalyzeAsync(financialInstrument.Screenshot);
             Instrument instrument = await GetInstrumentOrCreate(financialInstrument);
-            ResultOfLevel highResullt = _levelAnalyzer.Analyze(instrument.HighLevel, instrument.HighDetectionTime, signal.HighLevel);
-            ResultOfLevel lowResullt = _levelAnalyzer.Analyze(instrument.LowLevel, instrument.LowDetectionTime, signal.LowLevel);
+            Notification notification = await GetNotificationOrCreate(financialInstrument);
 
-            bool isNotify = instrument.LastNotification.HasValue && instrument.LastNotification.Value + repeateNotificationTime < _dateTimeProvider.GetCurrentTime();
+            ResultOfSignals resultOfSignals = _signalAnalyser.Analyze(instrument, signal, notification);
             string messageText = $"{financialInstrument.Name}. ";
 
-            bool needSend = false;
-            if (highResullt.SignalType == SignalType.PriceReachedLevel || lowResullt.SignalType == SignalType.PriceReachedLevel)
+            DateTime currentTime = _dateTimeProvider.GetCurrentTime();
+            bool needNotity = true;
+            if (resultOfSignals.High.SignalType == SignalType.PriceReachedLevel || resultOfSignals.Low.SignalType == SignalType.PriceReachedLevel)
             {
-                messageText += "Цена приближается к уровню.";
-                needSend = true;
+                messageText += "Цена подошла близко к уровню.";
             }
-            else if (highResullt.SignalType == SignalType.PriceApproachedLevel || lowResullt.SignalType == SignalType.PriceApproachedLevel)
+            else if (resultOfSignals.High.SignalType == SignalType.PriceIsNearLevel || resultOfSignals.High.SignalType == SignalType.PriceIsNearLevel)
             {
-                messageText += "Цена находится близко от уровня.";
-                needSend = true;
-            }
-            else if (isNotify)
-            {
-                if (highResullt.SignalType == SignalType.PriceIsNearLevel)
+                if (resultOfSignals.High.SignalType == SignalType.PriceIsNearLevel)
                 {
-                    messageText += $"Цена находится возле верхнего уровня {(int)highResullt.NearLevelTime.TotalHours}ч.";
-                    needSend = true;
+                    messageText += $"Цена торгуется возле верхнего уровня {(int)resultOfSignals.High.NearLevelTime.TotalHours}ч.";
+                    notification.SetLastTimeHigh(currentTime);
                 }
 
-                if (lowResullt.SignalType == SignalType.PriceIsNearLevel)
+                if (resultOfSignals.Low.SignalType == SignalType.PriceIsNearLevel)
                 {
-                    messageText += $"Цена находится возле нижнего уровня {(int)lowResullt.NearLevelTime.TotalHours}ч.";
-                    needSend = true;
+                    messageText += $"Цена торгуется возле нижнего уровня {(int)resultOfSignals.Low.NearLevelTime.TotalHours}ч.";
+                    notification.SetLastTimeLow(currentTime);
                 }
             }
+            else
+            {
+                needNotity = false;
+            }
 
-            if (needSend)
+            if (needNotity)
             {
                 await _notification.SendAsync(new NotificationMessage(preparatedImage, messageText));
                 _logger.LogInformation("Sent to telegram: " + messageText);
 
-                instrument.LastNotification = _dateTimeProvider.GetCurrentTime();
+                if (resultOfSignals.High.SignalType == SignalType.PriceIsNearLevel)
+                    notification.SetLastTimeHigh(currentTime);
+
+                if (resultOfSignals.Low.SignalType == SignalType.PriceIsNearLevel)
+                    notification.SetLastTimeLow(currentTime);
             }
 
-            instrument.SetHighLevel(signal.HighLevel, _dateTimeProvider.GetCurrentTime());
-            instrument.SetLowLevel(signal.LowLevel, _dateTimeProvider.GetCurrentTime());
+            instrument.SetHighLevel(signal.HighLevel, currentTime);
+            instrument.SetLowLevel(signal.LowLevel, currentTime);
             await _instrumentRepository.UpdateAsync(instrument);
+            await _notificaitonRepository.UpdateAsync(notification);
         }
-
-
     }
 
-    async Task<bool> RepeatAsync(int count, TimeSpan timeout, TimeSpan startDelay, Func<Task<bool>> action)
+    private async Task<bool> RepeatAsync(int count, TimeSpan timeout, TimeSpan startDelay, Func<Task<bool>> action)
     {
         await Task.Delay(startDelay);
         for (int i = 0; i < count; i++)
@@ -157,7 +162,7 @@ public class MainHostedService : BackgroundService
         return false;
     }
 
-    async Task LoopAsync(Func<Task<int>> init, Func<int, Task> loop, CancellationToken stoppingToken)
+    private async Task LoopAsync(Func<Task<int>> init, Func<int, Task> loop, CancellationToken stoppingToken)
     {
         int numberOfInstrument = 0;
         int counter = 0;
@@ -196,7 +201,7 @@ public class MainHostedService : BackgroundService
         }
     }
 
-    async Task RefreshPageAsync()
+    private async Task RefreshPageAsync()
     {
         if (!await _tradingView.IsOpenScreenerAsync())
         {
@@ -207,7 +212,7 @@ public class MainHostedService : BackgroundService
         await _tradingView.InputTickerAsync("usdt.p");
     }
 
-    async Task<Instrument> GetInstrumentOrCreate(FinancialInstrument financialInstrument)
+    private async Task<Instrument> GetInstrumentOrCreate(FinancialInstrument financialInstrument)
     {
         Instrument? instrument = await _instrumentRepository.FindByNameAsync(financialInstrument.Name);
 
@@ -219,5 +224,19 @@ public class MainHostedService : BackgroundService
         }
 
         return instrument;
+    }
+
+    private async Task<Notification> GetNotificationOrCreate(FinancialInstrument financialInstrument)
+    {
+        Notification? entity = await _notificaitonRepository.FindByNameAsync(financialInstrument.Name);
+
+        if (entity is null)
+        {
+            entity = new Notification(0, financialInstrument.Name);
+            await _notificaitonRepository.AddAsync(entity);
+            _logger.LogInformation($"Add notification to repo");
+        }
+
+        return entity;
     }
 }

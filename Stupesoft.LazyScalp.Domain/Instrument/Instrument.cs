@@ -17,7 +17,6 @@ public class Instrument
     public int LowLevel { get; private set; }
     public DateTime? HighDetectionTime { get; private set; }
     public DateTime? LowDetectionTime { get; private set; }
-    public DateTime? LastNotification { get; set; }
 
     public void SetHighLevel(int value, DateTime time)
     {

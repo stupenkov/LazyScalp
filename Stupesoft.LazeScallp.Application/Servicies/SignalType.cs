@@ -2,9 +2,8 @@
 
 public enum SignalType
 {
-    PriceIsFarFromLevel,
+    None,
     PriceReachedLevel,
-    PriceApproachedLevel,
     PriceIsNearLevel,
 }
 

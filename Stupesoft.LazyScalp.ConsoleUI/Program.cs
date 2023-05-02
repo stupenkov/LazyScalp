@@ -5,6 +5,7 @@ using Stupesoft.LazeScallp.Application.Configurations;
 using Stupesoft.LazeScallp.Application.Servicies;
 using Stupesoft.LazyScalp.ConsoleUI;
 using Stupesoft.LazyScalp.Domain.Instrument;
+using Stupesoft.LazyScalp.Domain.Notification;
 using Stupesoft.LazyScalp.Infrastructure;
 using Stupesoft.LazyScalp.Infrastructure.Repositories;
 using Stupesoft.LazyScalp.Infrastructure.Telegram;
@@ -21,10 +22,12 @@ using IHost host = Host.CreateDefaultBuilder(args)
         .Configure<TelegramBotOptions>(hostContext.Configuration.GetSection(TelegramBotOptions.TelegramBot))
         .Configure<TradingViewOptions>(hostContext.Configuration.GetSection(TradingViewOptions.TradingView))
         .AddSingleton<IInstrumentRepository, LiteDbInstrumentRepository>()
+        .AddSingleton<INotificaitonRepository, LiteDbNotificationRepository>()
         .AddSingleton<IDateTimeProvider, DateTimeProvider>()
         .AddSingleton<IImagePreparation, ImagePreparation>()
         .AddSingleton<INotification, TelegramBot>()
         .AddSingleton<ILevelAnalyzer, LevelAnalyzer>()
+        .AddSingleton<ISignalAnalyser, SignalAnalyzer>()
         .AddSingleton<IScreenshotAnalyzer, ScreenshotAnalyzer>()
         .AddSingleton<ITradingView, ChartPage>()
         .AddSingleton<IWebDriverFactory, WebDriverFactory>()

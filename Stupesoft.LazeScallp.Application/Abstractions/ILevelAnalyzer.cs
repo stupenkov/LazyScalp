@@ -4,5 +4,5 @@ namespace Stupesoft.LazeScallp.Application.Abstractions;
 
 public interface ILevelAnalyzer
 {
-    ResultOfLevel Analyze(int instrumentHighLevel, DateTime? detectionTime, int signalHighLevel);
+    SignalType Analyze(int instrumentLevel, int signalLevel);
 }
