@@ -6,17 +6,19 @@ using Stupesoft.LazyScalp.TradingView.Domain;
 
 namespace Stupesoft.LazyScalp.TradingView.Services;
 
-internal class Scaner : IScaner
+internal class Scanner : IScanner
 {
-    private readonly ILogger<Scaner> _logger;
+    private readonly ILogger<Scanner> _logger;
     private readonly IOptions<TradingViewOptions> _tradingVeiwOptions;
     private readonly IDateTimeProvider _dateTimeProvider;
     private readonly IPageChart _tradingView;
     private readonly IScreenshotAnalyzer _screenshotAnalyzer;
     private readonly IFinInstrumentTVRepository _finInstrumentTradingViewRepository;
 
-    public Scaner(
-        ILogger<Scaner> logger,
+    public bool IsPause { get; set; }
+
+    public Scanner(
+        ILogger<Scanner> logger,
         IOptions<TradingViewOptions> tradingVeiwOptions,
         IDateTimeProvider dateTimeProvider,
         IPageChart tradingView,
@@ -108,8 +110,22 @@ internal class Scaner : IScaner
     {
         int numberOfInstrument = 0;
         int counter = 0;
+        bool showedMessage = false;
         while (!stoppingToken.IsCancellationRequested)
         {
+            if (IsPause)
+            {
+                if (!showedMessage)
+                {
+                    _logger.LogInformation("Scanner paused.");
+                    showedMessage = true;
+                }
+
+                await Task.Delay(100, stoppingToken);
+                continue;
+            }
+
+            showedMessage = false;
             if (counter == 0)
             {
                 _logger.LogInformation("Loop initialization...");

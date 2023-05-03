@@ -24,7 +24,7 @@ public static class TradingViewExtensions
             .AddSingleton<IPageChart, ChartPage>()
             .AddSingleton<IDateTimeProvider, DateTimeProvider>()
             .AddSingleton<ITradingViewAPI, TradingViewAPI>()
-            .AddSingleton<IScaner, Scaner>()
+            .AddSingleton<IScanner, Scanner>()
             .AddSingleton<IFinInstrumentTVRepository, FinInstrumentTVRepository>());
     }
 }

@@ -20,6 +20,7 @@ using IHost host = Host.CreateDefaultBuilder(args)
     .AddTradingView()
     .ConfigureServices((hostContext, services) => services
         .AddHostedService<MainHostedService>()
+        .AddHostedService<UIHostedService>()
         .Configure<ImagePreparationOptions>(hostContext.Configuration.GetSection(ImagePreparationOptions.SectionName))
         .Configure<TelegramBotOptions>(hostContext.Configuration.GetSection(TelegramBotOptions.SectionName))
         .Configure<IndicatorOptions>(hostContext.Configuration.GetSection(IndicatorOptions.SectionName))
