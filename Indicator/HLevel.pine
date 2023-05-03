@@ -20,7 +20,7 @@ int dayVolumeLimit = input.int(defval =  100, title =  "Day volume limit, millio
 color brakeLevelColor = input.color(defval = color.gray, title = "Brake level color", group = "common")
 
 float firstDistanceLevelCoef = input.float(defval = 1, title = "Distance first level coefficient")
-float secondDistanceLevelCoef = input.float(defval = 2, title = "Distance first level coefficient")
+float secondDistanceLevelCoef = input.float(defval = 3, title = "Distance first level coefficient")
 
 // corelation
 corrTicker = input.symbol("BINANCE:BTCUSDT.P", "Correlation symbol", group = "correlation")
@@ -48,6 +48,7 @@ type levelLine
     string timeFrame
     bool hasNearLevel
     bool hide
+    label priceLableId
 
 var array<levelLine> levelLines = array.new<levelLine>()
 
@@ -74,6 +75,8 @@ string closeTfLow = na
 var color middleTableColor = #ff9800
 var color successTableColor = #3c963f
 var tableBgColor = #363636
+var color roundPriceColor = color.lime
+var color defaultPriceColor = color.white
 
 //====================================================================================
 // Calculate day volume
@@ -139,7 +142,6 @@ corr = math.round(ta.correlation(corrTickerData, currTickerData, corrPeriod), 2)
 // NATR
 //====================================================================================
 natr = request.security(syminfo.ticker, "5", ta.ema(ta.tr(true), natrLength) / close * 100)
-// natr = ta.ema(ta.tr(true), natrLength) / close * 100
 natrFormated = str.tostring(math.round(natr, 2)) + "%"
 
 //====================================================================================
@@ -218,6 +220,8 @@ while array.size(levelLines) > counter
       or (level.timeFrame == '60' and level.barIndex < bar_index - d1PivotBars - 1)
         if not na(level.lineId)
             line.delete(level.lineId)
+        if not na(level.priceLableId )
+            label.delete(level.priceLableId)
         array.remove(levelLines, counter)
         continue
 
@@ -235,10 +239,12 @@ while array.size(levelLines) > counter
         counter +=1
         continue
 
-    // remove far line
+      // remove far line
     if math.abs(level.price - close) > maxDistance
         if not na (level.lineId)
             line.delete(level.lineId)
+        if not na(level.priceLableId )
+            label.delete(level.priceLableId)
         counter +=1
         continue
 
@@ -274,6 +280,18 @@ while array.size(levelLines) > counter
     else
         line.set_color(level.lineId, color.new(color, transp))
         line.set_width(level.lineId, width)
+
+    // manage price label
+    if not na(level.lineId) and level.hasNearLevel and na(level.priceLableId) and level.crossBarIndex == -1
+        level.priceLableId := label.new(
+          x = level.barIndex,
+          y = 0,
+          text = str.tostring(level.price),
+          style = label.style_none,
+          textcolor = math.round_to_mintick(level.price / 100) * 100 == level.price ? roundPriceColor : defaultPriceColor,
+          yloc = level.kind == c_highLevel ? yloc.abovebar : yloc.belowbar) //yloc.price)
+    if not na(level.priceLableId) and (na(level.lineId) or level.crossBarIndex != -1 or not level.hasNearLevel) 
+        label.delete(level.priceLableId)
     
     counter += 1
 
@@ -283,7 +301,7 @@ while array.size(levelLines) > counter
 var table panel = table.new(
   position = position.top_right,
   columns = 4,
-  rows = 20,
+  rows = 30,
   bgcolor = tableBgColor
   )
 
@@ -350,6 +368,12 @@ if barstate.islast
         
         table.cell(table_id = panel, column = 0, row = 19, text = "secondDistanceLevel", bgcolor = color.aqua)
         table.cell(table_id = panel, column = 1, row = 19, text = str.tostring(math.round(volatility * secondDistanceLevelCoef * 100, 2)), bgcolor = color.aqua)
+
+        table.cell(table_id = panel, column = 0, row = 20, text = "pointvalue", bgcolor = color.aqua)
+        table.cell(table_id = panel, column = 1, row = 20, text = str.tostring(syminfo.pointvalue), bgcolor = color.aqua)
+        table.cell(table_id = panel, column = 0, row = 21, text = "mintick", bgcolor = color.aqua)
+        table.cell(table_id = panel, column = 1, row = 21, text = str.tostring(syminfo.mintick), bgcolor = color.aqua)
+
 
 //====================================================================================
 // Level power panel
@@ -421,3 +445,9 @@ if barstate.islast
 
     table.cell(table_id = descPanel, column = 0, row = 5, text = "Brake level", text_halign = text.align_right, text_color = textColor)
     table.cell(table_id = descPanel, column = 1, row = 5, bgcolor = color.new(brakeLevelColor, lineTransparent))
+
+    table.cell(table_id = descPanel, column = 0, row = 6, text = "Price on chart", text_halign = text.align_right, text_color = textColor)
+    table.cell(table_id = descPanel, column = 1, row = 6, bgcolor = defaultPriceColor)
+
+    table.cell(table_id = descPanel, column = 0, row = 7, text = "Round price on chart", text_halign = text.align_right, text_color = textColor)
+    table.cell(table_id = descPanel, column = 1, row = 7, bgcolor = roundPriceColor)
