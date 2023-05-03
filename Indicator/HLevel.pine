@@ -14,7 +14,7 @@ int d1Width = input.int(defval =  2, title =  "Width", minval =  1, maxval =  10
 color d1Color = input.color(defval = color.lime, title =  "Color line D1",  inline="d1Style", group = "D1")
 
 int timeToRemoveLine = input.int(defval =  60, title =  "Time to remove line, min", minval =  1, step =  1, group = "common") * 60
-int nearLevelCoef = input.int(defval =  10, title =  "Near level coefficient", step =  1, group = "common") 
+int nearLevelCoef = input.int(defval =  20, title =  "Near level coefficient", step =  1, group = "common") 
 float maxLevelDistanceCoef = input.float(defval =  1.0, title =  "Max level distance coefficient", step =  0.01, group = "common") 
 int dayVolumeLimit = input.int(defval =  100, title =  "Day volume limit, million", step =  1, group = "common") * 1000000
 color brakeLevelColor = input.color(defval = color.gray, title = "Brake level color", group = "common")
