@@ -30,6 +30,8 @@
     <ProjectReference Include="..\Stupesoft.LazeScallp.Application\Stupesoft.LazeScallp.Application.csproj" />
     <ProjectReference Include="..\Stupesoft.LazyScalp.Domain\Stupesoft.LazyScalp.Domain.csproj" />
     <ProjectReference Include="..\Stupesoft.LazyScalp.Infrastructure\Stupesoft.LazyScalp.Infrastructure.csproj" />
+    <ProjectReference Include="..\Stupesoft.LazyScalp.Shared\Stupesoft.LazyScalp.Shared.csproj" />
+    <ProjectReference Include="..\Stupesoft.LazyScalp.TradingView\Stupesoft.LazyScalp.TradingView.csproj" />
   </ItemGroup>
 
   <ItemGroup>

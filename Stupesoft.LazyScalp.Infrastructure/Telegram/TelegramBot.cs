@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using Stupesoft.LazeScallp.Application.Abstractions;
 using Stupesoft.LazeScallp.Application.Configurations;
+using Stupesoft.LazeScallp.Application.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.InputFiles;
