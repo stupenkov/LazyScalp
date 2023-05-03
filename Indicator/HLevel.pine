@@ -1,8 +1,8 @@
-﻿// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
-// © anton8787
+﻿// Author: Anton Stupenkov
+// Email: stupean@gmail.com
 
 //@version=5
-indicator("HLevel 2.0", overlay = true, max_lines_count = 50)
+indicator("HLevel 2.1", overlay = true, max_lines_count = 50)
 
 // H1
 int h1Width = input.int(defval =  1, title =  "Width", minval =  1, maxval =  10, step =  1, inline="h1Style", group = "H1")
@@ -22,8 +22,18 @@ color brakeLevelColor = input.color(defval = color.gray, title = "Brake level co
 float firstDistanceLevelCoef = input.float(defval = 1, title = "Distance first level coefficient")
 float secondDistanceLevelCoef = input.float(defval = 2, title = "Distance first level coefficient")
 
-bool showAdditionalInfo = input.bool(defval = true, title = "Show additional info", group = "visual")
+// corelation
+corrTicker = input.symbol("BINANCE:BTCUSDT.P", "Correlation symbol", group = "correlation")
+corrPeriod = input.int(title = "Correlation period", defval = 20, step = 1, group = "correlation")
+
+// natr
+natrLength = input.int(title="NATR length", defval = 14, group = "NATR")
+thresholdNatr = input.float(title = "NATR threshold", defval = 1, step = 0.1, group = "NATR")
+
+// show info
+bool showAdditionalInfo = input.bool(defval = false, title = "Show additional info", group = "visual")
 bool showDebugInfo = input.bool(defval = false, title = "Show debug info", group = "visual")
+
 
 var lineTransparent = 80
 var c_highLevel = 'highLevel'
@@ -117,6 +127,20 @@ d24 = request.security(syminfo.ticker, "60", volume[23] * close[23])
 dayVolNumber = math.round(d1 + d2 + d3 + d4 + d5 + d6 + d7 + d8 + d9 + d10 + d11 + d12 + d13 + d14 + d15 + d16 + d17 + d18 + d19 + d20 + d21 + d22 + d23 + d24)
 dayVol = str.tostring(dayVolNumber)
 dayVol := formater(dayVol)
+
+//====================================================================================
+// Corelation
+//====================================================================================
+corrTickerData = request.security(corrTicker, "5", close)
+currTickerData = request.security(syminfo.ticker, "5", close)
+corr = math.round(ta.correlation(corrTickerData, currTickerData, corrPeriod), 2)
+
+//====================================================================================
+// NATR
+//====================================================================================
+natr = request.security(syminfo.ticker, "5", ta.ema(ta.tr(true), natrLength) / close * 100)
+// natr = ta.ema(ta.tr(true), natrLength) / close * 100
+natrFormated = str.tostring(math.round(natr, 2)) + "%"
 
 //====================================================================================
 // Create level
@@ -298,23 +322,34 @@ if barstate.islast
     table.cell(table_id = panel, column = 1, row = 3, text = "Strong low", text_color = textColor, bgcolor = bgColorL)
     table.cell(table_id = panel, column = 2, row = 3, text = closeLowText, text_color = textColor, bgcolor = bgColorL)
     table.cell(table_id = panel, column = 3, row = 3, bgcolor = bgColorL)    
-    
+
+    table.cell(table_id = panel, column = 0, row = 4, text = "🔀")
+    table.cell(table_id = panel, column = 1, row = 4, text = "BTC correlation", text_color = textColor)
+    table.cell(table_id = panel, column = 2, row = 4, text = str.tostring(corr), text_color = textColor)
+
+    color backColorNatr = natr >= thresholdNatr ? successTableColor : na
+    table.cell(table_id = panel, column = 0, row = 5, text = "⚡", bgcolor = backColorNatr, text_color = textColor)
+    table.cell(table_id = panel, column = 1, row = 5, text = "NATR (5 min)", bgcolor = backColorNatr, text_color = textColor)
+    table.cell(table_id = panel, column = 2, row = 5, text = natrFormated, bgcolor = backColorNatr, text_color = textColor)
+    table.cell(table_id = panel, column = 3, row = 5, text = "", bgcolor = backColorNatr, text_color = textColor)
+
+
     if showAdditionalInfo
-        table.cell(table_id = panel, column = 1, row = 4, text = "AVG day ATR", text_color = textColor)
-        table.cell(table_id = panel, column = 2, row = 4, text = str.tostring(math.round_to_mintick(atrD1)), text_color = textColor)
+        table.cell(table_id = panel, column = 1, row = 10, text = "AVG day ATR", text_color = textColor)
+        table.cell(table_id = panel, column = 2, row = 10, text = str.tostring(math.round_to_mintick(atrD1)), text_color = textColor)
 
-        table.cell(table_id = panel, column = 1, row = 5, text = "Volatility, %", text_color = textColor)
-        table.cell(table_id = panel, column = 2, row = 5, text = str.tostring(math.round(volatility * 100, 2)), text_color = textColor)
+        table.cell(table_id = panel, column = 1, row = 11, text = "Volatility, %", text_color = textColor)
+        table.cell(table_id = panel, column = 2, row = 11, text = str.tostring(math.round(volatility * 100, 2)), text_color = textColor)
 
-        table.cell(table_id = panel, column = 1, row = 6, text = "Max. dist. to lvl", text_color = textColor)
-        table.cell(table_id = panel, column = 2, row = 6, text = str.tostring(math.round_to_mintick(maxDistance)), text_color = textColor)
+        table.cell(table_id = panel, column = 1, row = 12, text = "Max. dist. to lvl", text_color = textColor)
+        table.cell(table_id = panel, column = 2, row = 12, text = str.tostring(math.round_to_mintick(maxDistance)), text_color = textColor)
 
     if showDebugInfo
-        table.cell(table_id = panel, column = 0, row = 7, text = "firstDistanceLevel", bgcolor = color.aqua)
-        table.cell(table_id = panel, column = 1, row = 7, text = str.tostring(math.round(volatility * firstDistanceLevelCoef * 100, 2)), bgcolor = color.aqua)
+        table.cell(table_id = panel, column = 0, row = 18, text = "firstDistanceLevel", bgcolor = color.aqua)
+        table.cell(table_id = panel, column = 1, row = 18, text = str.tostring(math.round(volatility * firstDistanceLevelCoef * 100, 2)), bgcolor = color.aqua)
         
-        table.cell(table_id = panel, column = 0, row = 8, text = "secondDistanceLevel", bgcolor = color.aqua)
-        table.cell(table_id = panel, column = 1, row = 8, text = str.tostring(math.round(volatility * secondDistanceLevelCoef * 100, 2)), bgcolor = color.aqua)
+        table.cell(table_id = panel, column = 0, row = 19, text = "secondDistanceLevel", bgcolor = color.aqua)
+        table.cell(table_id = panel, column = 1, row = 19, text = str.tostring(math.round(volatility * secondDistanceLevelCoef * 100, 2)), bgcolor = color.aqua)
 
 //====================================================================================
 // Level power panel
