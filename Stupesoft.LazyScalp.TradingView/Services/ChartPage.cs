@@ -11,9 +11,9 @@ internal class ChartPage : IPageChart
 {
     private const string _pageUrl = "https://ru.tradingview.com/chart/";
     private readonly WebDriverWait _wait;
+    private readonly IWebDriverFactory _webDriverFactory;
     private readonly IFinInstrumentTVManager _finInstrumentTradingViewManager;
     private readonly IOptions<ScanerOptions> _scanerOptions;
-    private readonly IWebDriver _webDriver;
     private readonly Func<IWebElement> _humburgerButton;
     private readonly Func<IWebElement> _enterItem;
     private readonly Func<IWebElement> _emailLoginButton;
@@ -29,13 +29,16 @@ internal class ChartPage : IPageChart
     private readonly Func<IWebElement> _togglePanelButton;
     private readonly Func<IWebElement> _closeToastButton;
     private readonly Func<IWebElement> _tickerInput;
+    private IWebDriver _webDriver;
 
     public ChartPage(IWebDriverFactory webDriverFactory, IFinInstrumentTVManager finInstrumentTradingViewManager, IOptions<ScanerOptions> scanerOptions)
     {
-        _webDriver = webDriverFactory.Create();
-        _wait = new WebDriverWait(_webDriver, TimeSpan.FromSeconds(10));
+        _webDriverFactory = webDriverFactory;
         _finInstrumentTradingViewManager = finInstrumentTradingViewManager;
         _scanerOptions = scanerOptions;
+
+        _webDriver = webDriverFactory.Create();
+        _wait = new WebDriverWait(_webDriver, TimeSpan.FromSeconds(10));
         _humburgerButton = () => _webDriver.FindElement(By.XPath(_scanerOptions.Value.Selectors!.HumburgerButton));
         _enterItem = () => _webDriver.FindElement(By.XPath(_scanerOptions.Value.Selectors!.EnterItem));
         _emailLoginButton = () => _webDriver.FindElement(By.XPath(_scanerOptions.Value.Selectors!.EmailLoginButton));
@@ -166,6 +169,12 @@ internal class ChartPage : IPageChart
         await Task.Delay(0);
     }
 
+    public void ReloadBrowser()
+    {
+        _webDriverFactory.Destroy(_webDriver);
+        _webDriver = _webDriverFactory.Create();
+    }
+
     private byte[] TakeScreenshot()
     {
         Screenshot ss = ((ITakesScreenshot)_webDriver).GetScreenshot();
@@ -184,5 +193,4 @@ internal class ChartPage : IPageChart
             action?.Invoke();
         }
     }
-
 }

@@ -12,6 +12,7 @@ internal class Scanner : IScanner
     private readonly IOptions<TradingViewOptions> _tradingVeiwOptions;
     private readonly IDateTimeProvider _dateTimeProvider;
     private readonly IPageChart _tradingView;
+    private readonly IOptions<ScanerOptions> _scanerOptions;
     private readonly IScreenshotAnalyzer _screenshotAnalyzer;
     private readonly IFinInstrumentTVRepository _finInstrumentTradingViewRepository;
 
@@ -22,6 +23,7 @@ internal class Scanner : IScanner
         IOptions<TradingViewOptions> tradingVeiwOptions,
         IDateTimeProvider dateTimeProvider,
         IPageChart tradingView,
+        IOptions<ScanerOptions> scanerOptions,
         IScreenshotAnalyzer screenshotAnalyzer,
         IFinInstrumentTVRepository finInstrumentTradingViewRepository)
     {
@@ -29,6 +31,7 @@ internal class Scanner : IScanner
         _tradingVeiwOptions = tradingVeiwOptions;
         _dateTimeProvider = dateTimeProvider;
         _tradingView = tradingView;
+        _scanerOptions = scanerOptions;
         _screenshotAnalyzer = screenshotAnalyzer;
         _finInstrumentTradingViewRepository = finInstrumentTradingViewRepository;
     }
@@ -41,15 +44,27 @@ internal class Scanner : IScanner
         TradingViewOptions tradingViewOptions = _tradingVeiwOptions.Value;
         TimeSpan repeateNotificationTime = TimeSpan.FromMinutes(60);
 
-        await _tradingView.LoginAsync(tradingViewOptions.Login!, tradingViewOptions.Password!);
-        await _tradingView.SetChartTemplateAsync();
-
-        if (!await _tradingView.IsOpenScreenerAsync())
+        while (!stoppingToken.IsCancellationRequested)
         {
-            await _tradingView.OpenScreenerAsync();
-        }
+            try
+            {
+                await _tradingView.LoginAsync(tradingViewOptions.Login!, tradingViewOptions.Password!);
+                await _tradingView.SetChartTemplateAsync();
 
-        await LoopAsync(Init, Loop, stoppingToken);
+                if (!await _tradingView.IsOpenScreenerAsync())
+                {
+                    await _tradingView.OpenScreenerAsync();
+                }
+
+                await LoopAsync(Init, Loop, stoppingToken);
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning("Trading view failed. Reload web driver through {time} sec...", _scanerOptions.Value.ReloadDelayTimeSecond * 1000);
+                await Task.Delay(_scanerOptions.Value.ReloadDelayTimeSecond * 1000, stoppingToken);
+                _tradingView.ReloadBrowser();
+            }
+        }
     }
     private async Task<int> Init()
     {
@@ -134,10 +149,8 @@ internal class Scanner : IScanner
                 }
                 catch (Exception e)
                 {
-                    _logger.LogInformation("Loop initialization failed. \n{e}", e);
-                    _logger.LogInformation("Will try again, through 5 sec...");
-                    await Task.Delay(5000, stoppingToken);
-                    continue;
+                    _logger.LogError("Loop initialization failed. \n{e}", e);
+                    throw;
                 }
             }
 
@@ -148,8 +161,8 @@ internal class Scanner : IScanner
             }
             catch (Exception ex)
             {
-                _logger.LogInformation("Loop invoke failed. /n{ex}", ex);
-                _logger.LogInformation("The iteration skipping.");
+                _logger.LogInformation("Loop invoke failed. \n{ex}", ex);
+                throw;
             }
 
             if (counter >= numberOfInstrument - 1)
@@ -159,7 +172,7 @@ internal class Scanner : IScanner
             }
             else
             {
-                counter = counter + 1;
+                counter++;
             }
         }
     }

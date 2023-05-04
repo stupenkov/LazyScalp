@@ -4,6 +4,7 @@ namespace Stupesoft.LazyScalp.TradingView.Abstractions;
 
 public interface IPageChart
 {
+    void ReloadBrowser();
     Task LoginAsync(string username, string password);
     Task SetChartTemplateAsync();
     Task<bool> IsOpenScreenerAsync();

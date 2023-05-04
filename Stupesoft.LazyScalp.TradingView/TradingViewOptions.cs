@@ -11,6 +11,7 @@ public class ScanerOptions
 {
     public const string SectionName = "Scaner";
     public SelectorsOptions? Selectors { get; set; }
+    public int ReloadDelayTimeSecond { get; set; }
 }
 
 public class SelectorsOptions
