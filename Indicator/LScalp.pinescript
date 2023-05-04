@@ -1,8 +1,9 @@
 ﻿// Author: Anton Stupenkov
 // Email: stupean@gmail.com
+// Screener: https://t.me/LazyScalp
 
 //@version=5
-indicator("HLevel 2.3.0", overlay = true, max_lines_count = 50)
+indicator("LScalp 2.3.0", overlay = true, max_lines_count = 50)
 
 // H1
 int h1Width = input.int(defval =  1, title =  "Width", minval =  1, maxval =  10, step =  1, inline="h1Style", group = "H1")
