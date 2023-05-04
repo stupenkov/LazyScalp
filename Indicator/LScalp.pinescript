@@ -12,7 +12,7 @@ float lineSpacingError = input.float(defval = 0.2, title = "Line spacing error, 
 int localLevelPeriodSeconds = input.int(defval = 60, title =  "Local level period, min", group = "H1") * 60
 
 // D1
-int d1Width = input.int(defval =  2, title =  "Width", minval =  1, maxval =  10, step =  1, inline="d1Style", group = "D1")
+int d1Width = input.int(defval =  1, title =  "Width", minval =  1, maxval =  10, step =  1, inline="d1Style", group = "D1")
 color d1Color = input.color(defval = color.lime, title =  "Color line D1",  inline="d1Style", group = "D1")
 int globalLevelPeriodSeconds = input.int(defval =  240, title =  "Global level period, min", group = "D1") * 60
 
