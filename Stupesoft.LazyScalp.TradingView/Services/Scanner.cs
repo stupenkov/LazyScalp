@@ -47,7 +47,6 @@ internal class Scanner : IScanner
         if (!await _tradingView.IsOpenScreenerAsync())
         {
             await _tradingView.OpenScreenerAsync();
-            await _tradingView.RefreshPageAsync(); // fix съезжает панель скринира
         }
 
         await LoopAsync(Init, Loop, stoppingToken);
@@ -55,9 +54,9 @@ internal class Scanner : IScanner
     private async Task<int> Init()
     {
         await RefreshPageAsync();
-        await _tradingView.UpdateScreenerDataAsync();
+
         int count = await _tradingView.CountScreenerInstrumentsAsync();
-        _logger.LogInformation($"Total instruments: {count}");
+        _logger.LogInformation("Total instruments: {count}", count);
         return count;
     }
 
@@ -66,9 +65,9 @@ internal class Scanner : IScanner
         FinInstrumentTV? finInstrument = null;
         await _tradingView.SelectInstrumentAsync(counter);
 
-        await RepeatAsync(2, TimeSpan.FromSeconds(1), TimeSpan.Zero, async () =>
+        await RepeatAsync(2, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), async () =>
         {
-            bool success = await RepeatAsync(3, TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(3), async () =>
+            bool success = await RepeatAsync(12, TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(3), async () =>
             {
                 finInstrument = await _tradingView.GetInstrumentAsync(counter);
                 finInstrument.LastUpdate = _dateTimeProvider.GetCurrentTime();
@@ -85,7 +84,7 @@ internal class Scanner : IScanner
         if (finInstrument is null)
             return;
 
-        _logger.LogInformation($"index: {counter}, name: {finInstrument.Ticker}");
+        _logger.LogInformation("index: {counter}, name: {Ticker}", counter, finInstrument.Ticker);
 
         //await _finInstrumentTradingViewRepository.AddOrUpdateAsync(finInstrument);
         InstrumentReady?.Invoke(finInstrument);
@@ -135,8 +134,8 @@ internal class Scanner : IScanner
                 }
                 catch (Exception e)
                 {
-                    _logger.LogInformation($"Loop initialization failed. \n{e}");
-                    _logger.LogInformation($"Will try again, through 5 sec...");
+                    _logger.LogInformation("Loop initialization failed. \n{e}", e);
+                    _logger.LogInformation("Will try again, through 5 sec...");
                     await Task.Delay(5000, stoppingToken);
                     continue;
                 }
@@ -149,8 +148,8 @@ internal class Scanner : IScanner
             }
             catch (Exception ex)
             {
-                _logger.LogInformation($"Loop invoke failed. /n{ex}");
-                _logger.LogInformation($"The iteration skipping.");
+                _logger.LogInformation("Loop invoke failed. /n{ex}", ex);
+                _logger.LogInformation("The iteration skipping.");
             }
 
             if (counter >= numberOfInstrument - 1)

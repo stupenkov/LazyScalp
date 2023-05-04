@@ -99,7 +99,7 @@ internal class ChartPage : IPageChart
     {
         var tr = _screenerInstrumentsTable().FindElements(By.TagName("tr"))[index];
         _wait.Until(ExpectedConditions.ElementToBeClickable(tr)).Click();
-        await Task.Delay(1);
+        await Task.Delay(1000);
     }
 
     public async Task UpdateScreenerDataAsync()
