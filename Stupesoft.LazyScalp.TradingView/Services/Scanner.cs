@@ -99,7 +99,7 @@ internal class Scanner : IScanner
         if (finInstrument is null)
             return;
 
-        _logger.LogInformation("index: {counter}, name: {Ticker}", counter, finInstrument.Ticker);
+        _logger.LogInformation("Instrument has recivied: {Ticker}", finInstrument.Ticker);
 
         //await _finInstrumentTradingViewRepository.AddOrUpdateAsync(finInstrument);
         InstrumentReady?.Invoke(finInstrument);
@@ -154,7 +154,7 @@ internal class Scanner : IScanner
                 }
             }
 
-            _logger.LogInformation($"Loop invoke. Iterator index - {counter}...");
+            _logger.LogInformation("Loop invoke. Iterator index {counter} of {numberOfInstrument}...", counter + 1, numberOfInstrument);
             try
             {
                 await loop.Invoke(counter);
