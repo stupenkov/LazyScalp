@@ -2,7 +2,7 @@
 // Email: stupean@gmail.com
 
 //@version=5
-indicator("HLevel 2.1", overlay = true, max_lines_count = 50)
+indicator("HLevel 2.2.0", overlay = true, max_lines_count = 50)
 
 // H1
 int h1Width = input.int(defval =  1, title =  "Width", minval =  1, maxval =  10, step =  1, inline="h1Style", group = "H1")
@@ -12,9 +12,10 @@ float lineSpacingError = input.float(defval = 0.2, title = "Line spacing error, 
 // D1
 int d1Width = input.int(defval =  2, title =  "Width", minval =  1, maxval =  10, step =  1, inline="d1Style", group = "D1")
 color d1Color = input.color(defval = color.lime, title =  "Color line D1",  inline="d1Style", group = "D1")
+int globalLevelPeriodSeconds = input.int(defval =  240, title =  "Global level period, min", group = "D1") * 60
 
 int timeToRemoveLine = input.int(defval =  60, title =  "Time to remove line, min", minval =  1, step =  1, group = "common") * 60
-int nearLevelCoef = input.int(defval =  20, title =  "Near level coefficient", step =  1, group = "common") 
+int nearLevelCoef = input.int(defval =  40, title =  "Near level coefficient", step =  1, group = "common") 
 float maxLevelDistanceCoef = input.float(defval =  1.0, title =  "Max level distance coefficient", step =  0.01, group = "common") 
 int dayVolumeLimit = input.int(defval =  100, title =  "Day volume limit, million", step =  1, group = "common") * 1000000
 color brakeLevelColor = input.color(defval = color.gray, title = "Brake level color", group = "common")
@@ -56,7 +57,7 @@ int seconds = timeframe.in_seconds(timeframe.period)
 int historyBars = math.floor(timeToRemoveLine / seconds)
 
 int h1PivotBars = math.floor(3600 * 1.5 / seconds)
-int d1PivotBars = math.floor(3600 * 24 * 1.5 / seconds)
+int d1PivotBars = math.floor(globalLevelPeriodSeconds * 1.5 / seconds)
 
 //label.new(bar_index, high, str.tostring(h1PivotBars))
 float h1HPivot = ta.pivothigh(high, h1PivotBars, h1PivotBars)
@@ -190,11 +191,8 @@ if levelLinesSize > 1
             if counter != j
                 levelLine secondLevel = array.get(levelLines, counter)
                 float delta = math.min(firstLevel.price, secondLevel.price) * volatility 
-                if firstLevel.timeFrame == '60' and secondLevel.timeFrame == '60' 
-                    delta /= 2
+               
                 if math.abs(firstLevel.price - secondLevel.price) <= delta 
-                    // if (firstLevel.barIndex > bar_index - 3000)
-                    //     label.new(firstLevel.barIndex, firstLevel.price, str.tostring(volatility * 100) + '%')
                     firstLevel.hasNearLevel := true
                     counter := levelLinesSize 
                 else
