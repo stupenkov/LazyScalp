@@ -1,21 +1,19 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using WebDriverManager.DriverConfigs.Impl;
-using WebDriverManager;
 using Stupesoft.LazyScalp.TradingView.Abstractions;
 
 namespace Stupesoft.LazyScalp.TradingView.Services;
 
 internal class WebDriverFactory : IWebDriverFactory, IDisposable
 {
-    private static IWebDriver? _webDriver;
+    private IWebDriver? _webDriver;
 
     public IWebDriver Create()
     {
         if (_webDriver != null)
             return _webDriver;
-
-        new DriverManager().SetUpDriver(new ChromeConfig());
+        
+        //new DriverManager().SetUpDriver(new ChromeConfig());
 
         var service = ChromeDriverService.CreateDefaultService();
         service.HideCommandPromptWindow = true;

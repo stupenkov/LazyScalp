@@ -7,13 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DotNetSeleniumExtras.PageObjects" Version="3.11.0" />
-    <PackageReference Include="DotNetSeleniumExtras.PageObjects.Core" Version="4.3.0" />
-    <PackageReference Include="DotNetSeleniumExtras.WaitHelpers" Version="3.11.0" />
-    <PackageReference Include="DriverManagerUserAgent" Version="2.16.2" />
-    <PackageReference Include="LiteDB" Version="5.0.16" />
-    <PackageReference Include="LiteDB.Async" Version="0.1.6" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
+    <PackageReference Include="LiteDB" Version="5.0.16">
+      <TreatAsUsed>true</TreatAsUsed>
+    </PackageReference>
+    <PackageReference Include="LiteDB.Async" Version="0.1.6">
+      <TreatAsUsed>true</TreatAsUsed>
+    </PackageReference>
     <PackageReference Include="Telegram.Bot" Version="18.0.0" />
   </ItemGroup>
 

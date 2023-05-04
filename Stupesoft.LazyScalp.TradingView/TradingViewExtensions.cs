@@ -19,6 +19,7 @@ public static class TradingViewExtensions
             .AddOptions()
             .Configure<IndicatorOptions>(hostContext.Configuration.GetSection(IndicatorOptions.SectionName).Bind)
             .Configure<TradingViewOptions>(hostContext.Configuration.GetSection(TradingViewOptions.TradingView).Bind)
+            .Configure<ScanerOptions>(hostContext.Configuration.GetSection(ScanerOptions.SectionName).Bind)
             .AddSingleton<IWebDriverFactory, WebDriverFactory>()
             .AddSingleton<IFinInstrumentTVManager, FinInstrumentTVManager>()
             .AddSingleton<IPageChart, ChartPage>()
