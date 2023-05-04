@@ -2,12 +2,13 @@
 // Email: stupean@gmail.com
 
 //@version=5
-indicator("HLevel 2.2.0", overlay = true, max_lines_count = 50)
+indicator("HLevel 2.3.0", overlay = true, max_lines_count = 50)
 
 // H1
 int h1Width = input.int(defval =  1, title =  "Width", minval =  1, maxval =  10, step =  1, inline="h1Style", group = "H1")
 color h1Color = input.color(defval = #3179f5, title =  "Color line H1",  inline="h1Style", group = "H1")
 float lineSpacingError = input.float(defval = 0.2, title = "Line spacing error, %", group = "H1") / 100
+int localLevelPeriodSeconds = input.int(defval = 60, title =  "Local level period, min", group = "H1") * 60
 
 // D1
 int d1Width = input.int(defval =  2, title =  "Width", minval =  1, maxval =  10, step =  1, inline="d1Style", group = "D1")
@@ -56,14 +57,15 @@ var array<levelLine> levelLines = array.new<levelLine>()
 int seconds = timeframe.in_seconds(timeframe.period)
 int historyBars = math.floor(timeToRemoveLine / seconds)
 
-int h1PivotBars = math.floor(3600 * 1.5 / seconds)
-int d1PivotBars = math.floor(globalLevelPeriodSeconds * 1.5 / seconds)
+int h1PivotBars = math.floor(localLevelPeriodSeconds * 1.5 / seconds)
+int globalPivotBars = math.floor(globalLevelPeriodSeconds * 1.5 / seconds)
+int d1PivotBars = math.floor(3600 * 24 * 1.5 / seconds)
 
 //label.new(bar_index, high, str.tostring(h1PivotBars))
 float h1HPivot = ta.pivothigh(high, h1PivotBars, h1PivotBars)
-float d1HPivot = ta.pivothigh(high, d1PivotBars, d1PivotBars)
+float d1HPivot = ta.pivothigh(high, globalPivotBars, globalPivotBars)
 float h1LPivot = ta.pivotlow(low, h1PivotBars, h1PivotBars)
-float d1LPivot = ta.pivotlow(low, d1PivotBars, d1PivotBars)
+float d1LPivot = ta.pivotlow(low, globalPivotBars, globalPivotBars)
 
 float atrD1 = request.security(syminfo.tickerid, 'D', ta.atr(7))
 float volatility = (atrD1 / nearLevelCoef) / close
@@ -142,8 +144,17 @@ corr = math.round(ta.correlation(corrTickerData, currTickerData, corrPeriod), 2)
 //====================================================================================
 // NATR
 //====================================================================================
-natr = request.security(syminfo.ticker, "5", ta.ema(ta.tr(true), natrLength) / close * 100)
-natrFormated = str.tostring(math.round(natr, 2)) + "%"
+float natr = request.security(syminfo.ticker, "5", ta.ema(ta.tr(true), natrLength) / close)
+string natrFormated = str.tostring(math.round(natr * 100, 2)) + "%"
+
+
+//====================================================================================
+// Calculate distance for first and second levels
+//====================================================================================
+float natrDistanceLevel = request.security(syminfo.ticker, "5", ta.ema(ta.tr(true), 12 * 24) / close)
+string natrDistanceLevelFormatted = str.tostring(math.round(natrDistanceLevel * 100, 2)) + "%"
+float firstDistanceToLevel = natrDistanceLevel * firstDistanceLevelCoef 
+float secondDistanceToLevel = natrDistanceLevel * secondDistanceLevelCoef 
 
 //====================================================================================
 // Create level
@@ -315,9 +326,9 @@ if barstate.islast
 
     float closeHighPercent = math.round(closeHigh * 100, 2)
     string closeHighText = closeHighPercent > 100 ? "-" : str.tostring(closeHighPercent) + "%"
-    bgColorH := if closeHigh < volatility * firstDistanceLevelCoef
+    bgColorH := if closeHigh < firstDistanceToLevel
         successTableColor
-    else if closeHigh < volatility * secondDistanceLevelCoef
+    else if closeHigh < secondDistanceToLevel
         middleTableColor
     else 
         na
@@ -328,9 +339,9 @@ if barstate.islast
 
     float closeLowPercent = math.round(closeLow * 100, 2)
     string closeLowText = closeLowPercent > 100 ? "-" : str.tostring(closeLowPercent) + "%"
-    bgColorL := if closeLow < volatility * firstDistanceLevelCoef
+    bgColorL := if closeLow < firstDistanceToLevel
         successTableColor
-    else if closeLow < volatility * secondDistanceLevelCoef
+    else if closeLow < secondDistanceToLevel
         middleTableColor
     else 
         na
@@ -367,10 +378,10 @@ if barstate.islast
         table.cell(table_id = panel, column = 0, row = 19, text = "secondDistanceLevel", bgcolor = color.aqua)
         table.cell(table_id = panel, column = 1, row = 19, text = str.tostring(math.round(volatility * secondDistanceLevelCoef * 100, 2)), bgcolor = color.aqua)
 
-        table.cell(table_id = panel, column = 0, row = 20, text = "pointvalue", bgcolor = color.aqua)
-        table.cell(table_id = panel, column = 1, row = 20, text = str.tostring(syminfo.pointvalue), bgcolor = color.aqua)
-        table.cell(table_id = panel, column = 0, row = 21, text = "mintick", bgcolor = color.aqua)
-        table.cell(table_id = panel, column = 1, row = 21, text = str.tostring(syminfo.mintick), bgcolor = color.aqua)
+        table.cell(table_id = panel, column = 0, row = 20, text = "natrDistanceLevel", bgcolor = color.aqua)
+        table.cell(table_id = panel, column = 1, row = 20, text = natrDistanceLevelFormatted, bgcolor = color.aqua)
+        // table.cell(table_id = panel, column = 0, row = 21, text = "mintick", bgcolor = color.aqua)
+        // table.cell(table_id = panel, column = 1, row = 21, text = str.tostring(syminfo.mintick), bgcolor = color.aqua)
 
 
 //====================================================================================
