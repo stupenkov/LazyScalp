@@ -3,7 +3,7 @@
 // Screener: https://t.me/LazyScalp
 
 //@version=5
-indicator("LScalp 2.3.0", overlay = true, max_lines_count = 50)
+indicator("LScalp 2.3.1", overlay = true, max_lines_count = 50)
 
 // H1
 int h1Width = input.int(defval =  1, title =  "Width", minval =  1, maxval =  10, step =  1, inline="h1Style", group = "H1")
@@ -23,7 +23,7 @@ int dayVolumeLimit = input.int(defval =  100, title =  "Day volume limit, millio
 color brakeLevelColor = input.color(defval = color.gray, title = "Brake level color", group = "common")
 
 float firstDistanceLevelCoef = input.float(defval = 1, title = "Distance first level coefficient")
-float secondDistanceLevelCoef = input.float(defval = 3, title = "Distance first level coefficient")
+float secondDistanceLevelCoef = input.float(defval = 4, title = "Distance first level coefficient")
 
 // corelation
 corrTicker = input.symbol("BINANCE:BTCUSDT.P", "Correlation symbol", group = "correlation")
