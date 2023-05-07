@@ -23,7 +23,7 @@ public class ImagePreparation : IImagePreparation
         ImagePreparationOptions options = _imagePreparationOptions.Value;
         SKRectI rectI = new SKRectI(options.Left, options.Top, options.Right, options.Bottom);
 
-        var subset = pixmap.ExtractSubset(rectI);
+        using var subset = pixmap.ExtractSubset(rectI);
         using var data = subset.Encode(SKPngEncoderOptions.Default);
         return data.ToArray();
     }

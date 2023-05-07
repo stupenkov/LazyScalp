@@ -11,4 +11,6 @@ public class IndicatorOptions
     public string? WarningColor { get; set; }
     public string? SuccessColor { get; set; }
     public string? DangerColor { get; set; }
+    public ImagePoint? CodeColorIndicatorTarget { get; set; }
+    public int CodeColorIndicatorSideSize { get; set; } 
 }

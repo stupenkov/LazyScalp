@@ -42,14 +42,21 @@ public class MainHostedService : BackgroundService
     {
         _tradingViewAPI.Scaner.InstrumentReady += async (instrumentTV) =>
         {
-            DateTime currDate = _dateTimeProvider.GetCurrentTime();
-            FinInstrument.Data instrumentData = await _instrumentDataExtractor.ExtractAsync(instrumentTV);
-            FinInstrument instrument = (await _finInstrumentRepository.FindByTickerAsync(instrumentTV.Ticker!));
-            instrument ??= _finInstrumentManager.Create(instrumentTV.Ticker!);
-            _finInstrumentManager.AddData(instrument, instrumentData);
-            await _finInstrumentRepository.AddOrUpdateAsync(instrument);
-            var signals = await _instrumentAnslyzer.AnalyzeAsync(instrument);
-            await _sender.SendAsync(signals, instrument);
+            try
+            {
+                DateTime currDate = _dateTimeProvider.GetCurrentTime();
+                FinInstrument.Data instrumentData = await _instrumentDataExtractor.ExtractAsync(instrumentTV);
+                FinInstrument instrument = (await _finInstrumentRepository.FindByTickerAsync(instrumentTV.Ticker!));
+                instrument ??= _finInstrumentManager.Create(instrumentTV.Ticker!);
+                _finInstrumentManager.AddData(instrument, instrumentData);
+                await _finInstrumentRepository.AddOrUpdateAsync(instrument);
+                var signals = await _instrumentAnslyzer.AnalyzeAsync(instrument);
+                await _sender.SendAsync(signals, instrument);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "");
+            }
         };
 
         _logger.LogInformation("Runing instrument scanner...");
