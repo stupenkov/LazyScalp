@@ -13,6 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stupesoft.LazeScallp.Applic
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Indicator", "Indicator", "{68CF155F-0E01-4EDB-838C-5A7E24DDBE23}"
 	ProjectSection(SolutionItems) = preProject
+		Indicator\HLevel.lib.pinescript = Indicator\HLevel.lib.pinescript
 		Indicator\LScalp.pinescript = Indicator\LScalp.pinescript
 		Indicator\Serializer.pinescript = Indicator\Serializer.pinescript
 		Indicator\ScalpingLevelLite.pinescript = Indicator\ScalpingLevelLite.pinescript

@@ -6,6 +6,7 @@
 
 //@version=5
 indicator("Scalping level [Lite] 1.0.0", overlay = true, max_lines_count = 500)
+import stupean/HLevel/1 as HLevel
 
 //#region INPUTS ============================================
 // Local level
@@ -46,219 +47,6 @@ int GLOBAL_PERIOD = 2
 int BREAK_PERIOD = 3
 //#endregion
 
-//#region CLASS Pivots ============================================
-type pivot
-    int period
-    int legBars
-    float hPrice
-    float lPrice
-
-type pivotsList
-    int secondsInCurrentPeriod
-    array<pivot> pivots
-
-method init(pivotsList this, int secondsInCurrentPeriod) =>
-    this.pivots := array.new<pivot>()
-    this.secondsInCurrentPeriod := secondsInCurrentPeriod
-
-method add(pivotsList this, int period, int seconds) =>
-    int legBars = math.ceil(seconds * 1.5 / this.secondsInCurrentPeriod)
-    pivot p = pivot.new(
-      period = period,
-      legBars = legBars,
-      hPrice = ta.pivothigh(high, legBars, legBars),
-      lPrice = ta.pivotlow(low, legBars, legBars))
-    this.pivots.push(p)
-    p
-
-method size(pivotsList this) =>
-    this.pivots.size()
-
-method get(pivotsList this, int index) =>
-    this.pivots.get(index)
-//#endregion
-
-//#region CLASS Levels ============================================
-type level
-    string side
-    int barIndex
-    int crossBarIndex = -1
-    float price
-    line lineId
-    int period
-    bool hasNearLevel
-    bool isHide
-    label priceLableId
-
-type levelsClass
-    int maxBars
-    array<int> lifetimes
-    array<level> levels
-
-method init(levelsClass this, int maxBars = 4000) =>
-    this.levels := array.new<level>()
-    this.lifetimes := array.new<int>(10, -1)
-    this.maxBars := maxBars
-
-method addLifetime(levelsClass this, int period, int lifetimeBars) =>
-    this.lifetimes.set(period, lifetimeBars)
-
-method size(levelsClass this) =>
-    this.levels.size()
-
-method getAll(levelsClass this) =>
-    this.levels
-
-method delete(levelsClass this, int index) =>
-    level lvl = this.levels.get(index)
-    if not na(lvl.lineId)
-        lvl.lineId.delete()
-    if not na(lvl.priceLableId)
-        lvl.priceLableId.delete()
-    this.levels.remove(index)
-
-method isLifetimeExpired(levelsClass this, level lvl) =>
-    int lifetime = this.lifetimes.get(lvl.period)
-    if lifetime == 0
-        false
-    else if lvl.barIndex < bar_index - lifetime
-        true
-    else
-        false
-
-method update(levelsClass this, pivotsList pivots, float priceRange) =>
-    pivot p = pivots.get(0)
-    if not na(p.hPrice) 
-        level newLevel = level.new(
-          side = SIDE_HIGH,
-          barIndex = bar_index - p.legBars,
-          price = p.hPrice,
-          period = p.period)
-        this.levels.unshift(newLevel)
-
-    if not na(p.lPrice)
-        level newLevel = level.new(
-          side = SIDE_LOW,
-          barIndex = bar_index - p.legBars,
-          price = p.lPrice,
-          period = p.period)
-        this.levels.unshift(newLevel)
-
-    int counter = 0
-    while counter < this.levels.size()
-        level lvl = this.levels.get(counter)
-        // delete old level
-        if (lvl.barIndex < bar_index - this.maxBars)
-            this.delete(counter)
-            continue
-
-        // mark cross level
-        bool isCross = lvl.side == SIDE_HIGH ? lvl.price < high : lvl.price > low
-        if isCross and lvl.crossBarIndex == -1
-            lvl.crossBarIndex := bar_index
-
-        // delete crossed level
-        if lvl.crossBarIndex != -1 and lvl.crossBarIndex < bar_index - this.lifetimes.get(BREAK_PERIOD)
-            this.delete(counter)
-            continue
-
-        // define senior levels
-        for pivotIndex = pivots.size() - 1 to 1
-            pivot piv = pivots.get(pivotIndex) 
-            if (lvl.side == SIDE_HIGH and lvl.price == piv.hPrice) or (lvl.side == SIDE_LOW and lvl.price == piv.lPrice)
-                lvl.period := piv.period
-                lvl.isHide := false
-                break
-      
-        // hide far levels
-        float maxPrice = close + priceRange
-        float minPrice = close - priceRange
-        if (lvl.side == SIDE_HIGH and lvl.price > maxPrice) or (lvl.side == SIDE_LOW and lvl.price < minPrice )
-            lvl.isHide := true
-        else if lvl.isHide
-            lvl.isHide := false    
-
-        // hide expired levels
-        if this.isLifetimeExpired(lvl)
-            lvl.isHide := true
-        
-        counter += 1
-//#endregion
-
-//#region CLASS Drawer ============================================
-type lineStyle
-    int width = 1
-    color lineColor
-    string style = line.style_solid
-
-type levelDrawerClass
-    array<lineStyle> styles
-    color roundPriceColor
-    color defaultPriceColor
-    string priceShowOptions
-
-method init(levelDrawerClass this, priceShowOptions, color roundPriceColor = color.green, color defaultPriceColor = color.white) =>
-    this.styles := array.new<lineStyle>()
-    this.roundPriceColor := roundPriceColor
-    this.defaultPriceColor := defaultPriceColor
-    this.priceShowOptions := priceShowOptions
-
-method addStyle(levelDrawerClass this, lineStyle style) =>
-    this.styles.push(style)
-
-method draw(levelDrawerClass this, array<level> levels) =>
-    if levels.size() > 0
-        lineStyle breakStyle = this.styles.last()
-        for i = 0 to levels.size() - 1
-            level lvl = levels.get(i)
-            lineStyle lStyle = this.styles.get(lvl.period)
-            if lvl.isHide 
-                if not na(lvl.lineId)
-                    lvl.lineId.delete()
-                if not na(lvl.priceLableId)
-                    lvl.priceLableId.delete()
-                continue
-
-            if na(lvl.lineId)
-                lvl.lineId := line.new(
-                  x1 = lvl.barIndex,
-                  y1 = lvl.price,
-                  x2 = lvl.barIndex + 1,
-                  y2 = lvl.price,
-                  extend = extend.right,
-                  color = lStyle.lineColor,
-                  style = lStyle.style,
-                  width = lStyle.width)                
-                0
-            else if lvl.crossBarIndex != -1
-                lvl.lineId.set_color(breakStyle.lineColor) 
-                lvl.lineId.set_style(breakStyle.style) 
-                lvl.lineId.set_width(breakStyle.width) 
-                lvl.lineId.set_x2(lvl.crossBarIndex + 10) 
-                lvl.lineId.set_extend(extend.none) 
-                0
-            else
-                lvl.lineId.set_color(lStyle.lineColor) 
-                lvl.lineId.set_style(lStyle.style) 
-                lvl.lineId.set_width(lStyle.width) 
-                0
-
-            if this.priceShowOptions != "none"
-                if na(lvl.priceLableId)
-                    lvl.priceLableId := label.new(
-                      x = lvl.barIndex,
-                      y = 0,
-                      text = str.tostring(lvl.price),
-                      size = this.priceShowOptions,
-                      style = label.style_none,
-                      textcolor = math.round_to_mintick(lvl.price / 100) * 100 == lvl.price ? this.roundPriceColor : this.defaultPriceColor,
-                      yloc = lvl.side == SIDE_HIGH ? yloc.abovebar : yloc.belowbar)
-                    0
-                else if lvl.crossBarIndex != -1
-                    lvl.priceLableId.set_textcolor(breakStyle.lineColor)
-                    0
-//#endregion
-
 //#region GLOBAL VARIABLES ============================================
 int secondsInCurrentPeriod = timeframe.in_seconds(timeframe.period)
 int localLevelLifetimeBars = math.floor(localLevelLifetimeSeconds / secondsInCurrentPeriod)
@@ -267,8 +55,8 @@ int globalLevelLifetimeBars = math.floor(globalLevelLifetimeSeconds / secondsInC
 int breakLevelLifetimeBars = math.floor(breakLevelLifetimeSeconds / secondsInCurrentPeriod)
 float priceRangeAtr = request.security(syminfo.ticker, "60", ta.atr(24))
 float priceRange = priceRangeAtr * maxLevelDistanceCoef
-var levelsClass levels = levelsClass.new()
-var levelDrawerClass drawer = levelDrawerClass.new()
+var HLevel.levelsClass levels = HLevel.levelsClass.new()
+var HLevel.levelDrawerClass drawer = HLevel.levelDrawerClass.new()
 var bool isInit = false
 //#endregion
 
@@ -281,15 +69,15 @@ if not isInit
     levels.addLifetime(BREAK_PERIOD, breakLevelLifetimeBars)
 
     drawer.init(priceShowOptions)
-    drawer.addStyle(lineStyle.new(localLevelWidth, localLevelColor))
-    drawer.addStyle(lineStyle.new(middleLevelWidth, middleLevelColor))
-    drawer.addStyle(lineStyle.new(globalLevelWidth, globalLevelColor))
-    drawer.addStyle(lineStyle.new(breakLevelWidth, breakLevelColor))
+    drawer.addStyle(HLevel.lineStyle.new(localLevelWidth, localLevelColor))
+    drawer.addStyle(HLevel.lineStyle.new(middleLevelWidth, middleLevelColor))
+    drawer.addStyle(HLevel.lineStyle.new(globalLevelWidth, globalLevelColor))
+    drawer.addStyle(HLevel.lineStyle.new(breakLevelWidth, breakLevelColor))
     isInit := true
 //#endregion
 
 //#region MAIN LOOP =================================================================
-pivotsList pivots = pivotsList.new()
+HLevel.pivotsList pivots = HLevel.pivotsList.new()
 pivots.init(secondsInCurrentPeriod)
 pivots.add(LOCAL_PERIOD, localLevelPeriodSeconds)
 pivots.add(MIDDLE_PERIOD, middleLevelPeriodSeconds)
