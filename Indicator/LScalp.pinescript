@@ -3,14 +3,13 @@
 // Screener: https://t.me/LazyScalp
 
 //@version=5
-indicator("LScalp 2.3.3", overlay = true, max_lines_count = 50)
+indicator("Scalping level [PRO] v2.3.4", overlay = true, max_lines_count = 50)
 import stupean/Serializer/2 as serializer
 
 //#region INPUT ===========================================================
 // H1
 int h1Width = input.int(defval =  1, title =  "Width", minval =  1, maxval =  10, step =  1, inline="h1Style", group = "H1")
 color h1Color = input.color(defval = #3179f5, title =  "Color line H1",  inline="h1Style", group = "H1")
-float lineSpacingError = input.float(defval = 0.2, title = "Line spacing error, %", group = "H1") / 100
 int localLevelPeriodSeconds = input.int(defval = 60, title =  "Local level period, min", group = "H1") * 60
 
 // D1
@@ -19,13 +18,13 @@ color d1Color = input.color(defval = color.lime, title =  "Color line D1",  inli
 int globalLevelPeriodSeconds = input.int(defval =  240, title =  "Global level period, min", group = "D1") * 60
 
 int timeToRemoveLine = input.int(defval =  60, title =  "Time to remove line, min", minval =  1, step =  1, group = "common") * 60
-int nearLevelCoef = input.int(defval =  40, title =  "Near level coefficient", step =  1, group = "common")
-float maxLevelDistanceCoef = input.float(defval =  1.0, title =  "Max level distance coefficient", step =  0.01, group = "common")
+float nearLevelCoef = input.float(defval =  0.1, title =  "Near level coefficient", step =  1, group = "common")
+float maxLevelDistanceCoef = input.float(defval =  5, title =  "Max level distance coefficient", step =  0.01, group = "common")
 int dayVolumeLimit = input.int(defval =  100, title =  "Day volume limit, million", step =  1, group = "common") * 1000000
 color brakeLevelColor = input.color(defval = color.gray, title = "Brake level color", group = "common")
 
-float firstDistanceLevelCoef = input.float(defval = 1, title = "Distance first level coefficient")
-float secondDistanceLevelCoef = input.float(defval = 4, title = "Distance first level coefficient")
+float firstDistanceLevelCoef = input.float(defval = 0.7, title = "Distance first level coefficient")
+float secondDistanceLevelCoef = input.float(defval = 3.0, title = "Distance first level coefficient")
 
 // corelation
 corrTicker = input.symbol("BINANCE:BTCUSDT.P", "Correlation symbol", group = "correlation")
@@ -37,9 +36,18 @@ thresholdNatr = input.float(title = "NATR threshold", defval = 1, step = 0.1, gr
 
 // show info
 bool showAdditionalInfo = input.bool(defval = false, title = "Show additional info", group = "visual")
+bool showLegends = input.bool(defval = true, title = "Show legends", group = "visual")
 bool showDebugInfo = input.bool(defval = false, title = "Show debug info", group = "visual", tooltip = "Development only")
 bool showColorCode = input.bool(defval = false, title = "Show color code", group = "visual", tooltip = "Development only")
 //#endregion ===========================================================
+
+//#region NATR =================================================================
+float natr = request.security(syminfo.ticker, "5", ta.ema(ta.tr(true), natrLength) / close)
+string natrFormated = str.tostring(math.round(natr * 100, 2)) + "%"
+
+float natr24H = request.security(syminfo.ticker, "60", ta.ema(ta.tr(true), 24) / close)
+
+//#endregion =========================================================================
 
 var lineTransparent = 80
 var c_highLevel = 'highLevel'
@@ -70,15 +78,16 @@ float d1HPivot = ta.pivothigh(high, globalPivotBars, globalPivotBars)
 float h1LPivot = ta.pivotlow(low, h1PivotBars, h1PivotBars)
 float d1LPivot = ta.pivotlow(low, globalPivotBars, globalPivotBars)
 
-float atrD1 = request.security(syminfo.tickerid, 'D', ta.atr(7))
-float volatility = (atrD1 / nearLevelCoef) / close
-float maxDistance = atrD1 * maxLevelDistanceCoef
+// Calculate distancies 
+float priceRangeAtr = request.security(syminfo.ticker, "60", ta.atr(24))
+float maxDistance = priceRangeAtr * maxLevelDistanceCoef
+float distanceBetweenNearLevels = priceRangeAtr * nearLevelCoef
+float firstDistanceToLevel = priceRangeAtr * firstDistanceLevelCoef
+float secondDistanceToLevel = priceRangeAtr * secondDistanceLevelCoef
 
-float closeHigh = -1
 float closeHighPrice = -1
-float closeLowPrice = -1
-float closeLow = -1
 string closeTfHigh = na
+float closeLowPrice = -1
 string closeTfLow = na
 var color middleTableColor = #ff9800
 var color successTableColor = #3c963f
@@ -170,18 +179,6 @@ float currTickerData = request.security(syminfo.ticker, "5", close)
 float corr = math.round(ta.correlation(corrTickerData, currTickerData, corrPeriod), 2)
 //#endregion =========================================================================
 
-//#region NATR =================================================================
-float natr = request.security(syminfo.ticker, "5", ta.ema(ta.tr(true), natrLength) / close)
-string natrFormated = str.tostring(math.round(natr * 100, 2)) + "%"
-//#endregion =========================================================================
-
-//#region Calculate distance for first and second levels =============================
-float natrDistanceLevel = request.security(syminfo.ticker, "5", ta.ema(ta.tr(true), 12 * 24) / close)
-string natrDistanceLevelFormatted = str.tostring(math.round(natrDistanceLevel * 100, 2)) + "%"
-float firstDistanceToLevel = natrDistanceLevel * firstDistanceLevelCoef
-float secondDistanceToLevel = natrDistanceLevel * secondDistanceLevelCoef
-//#endregion =========================================================================
-
 //#region LEVELS =================================================================
 
 // Create level
@@ -227,9 +224,8 @@ if levelLinesSize > 1
         while levelLinesSize > counter
             if counter != j
                 levelLine secondLevel = array.get(levelLines, counter)
-                float delta = math.min(firstLevel.price, secondLevel.price) * volatility
 
-                if math.abs(firstLevel.price - secondLevel.price) <= delta
+                if math.abs(firstLevel.price - secondLevel.price) <= distanceBetweenNearLevels
                     firstLevel.hasNearLevel := true
                     counter := levelLinesSize
                 else
@@ -261,13 +257,10 @@ while array.size(levelLines) > counter
         continue
 
     // distance to close levels
-    float priceDistance = math.abs(close - level.price) / close
-    if level.crossBarIndex == -1 and level.hasNearLevel and level.kind == c_highLevel and (closeHigh == -1 or priceDistance < closeHigh)
-        closeHigh := priceDistance
+    if level.crossBarIndex == -1 and level.hasNearLevel and level.kind == c_highLevel and (closeHighPrice == -1 or level.price < closeHighPrice)
         closeTfHigh := level.timeFrame
         closeHighPrice := level.price
-    if level.crossBarIndex == -1 and level.hasNearLevel and level.kind == c_lowLevel and (closeLow == -1 or priceDistance < closeLow)
-        closeLow := priceDistance
+    if level.crossBarIndex == -1 and level.hasNearLevel and level.kind == c_lowLevel and (closeLowPrice == -1 or level.price > closeLowPrice )
         closeTfLow := level.timeFrame
         closeLowPrice := level.price
 
@@ -355,26 +348,26 @@ if barstate.islast
     table.cell(table_id = panel, column = 2, row = 1, text = dayVol, text_color = textColor, bgcolor = dayVolumeColor)
     table.cell(table_id = panel, column = 3, row = 1, text = "          ", bgcolor = dayVolumeColor)
 
-    float closeHighPercent = math.round(closeHigh * 100, 2)
-    string closeHighText = closeHighPercent < 0 ? "-" : str.tostring(closeHighPercent) + "%"
-    bgColorH := if closeHigh < 0
+    float closeHighPercent =math.round(math.abs(closeHighPrice - close) * 100 / close, 2)
+    string closeHighText = closeHighPercent < 0 or closeHighPercent > 100 ? "-" : str.tostring(closeHighPercent) + "%"
+    bgColorH := if closeHighPrice < 0
         na 
-    else if closeHigh < firstDistanceToLevel
+    else if closeHighPrice < close + firstDistanceToLevel
         successTableColor
-    else if closeHigh < secondDistanceToLevel
+    else if closeHighPrice < close + secondDistanceToLevel
         middleTableColor
     table.cell(table_id = panel, column = 0, row = 2, text = "🔼", text_color = textColor, bgcolor = bgColorH)
     table.cell(table_id = panel, column = 1, row = 2, text = "Strong high", text_color = textColor, bgcolor = bgColorH, width = 7)
     table.cell(table_id = panel, column = 2, row = 2, text = closeHighText, text_color = textColor, bgcolor = bgColorH, width = 4)
     table.cell(table_id = panel, column = 3, row = 2, bgcolor = bgColorH)
 
-    float closeLowPercent = math.round(closeLow * 100, 2)
-    string closeLowText = closeLowPercent < 0 ? "-" : str.tostring(closeLowPercent) + "%"
-    bgColorL := if closeLow < 0
+    float closeLowPercent = math.round(math.abs(closeLowPrice - close) * 100 / close, 2)
+    string closeLowText = closeLowPercent < 0 or closeLowPercent > 100 ? "-" : str.tostring(closeLowPercent) + "%"
+    bgColorL := if closeLowPrice < 0
         na
-    else if closeLow < firstDistanceToLevel
+    else if closeLowPrice > close - firstDistanceToLevel
         successTableColor
-    else if closeLow < secondDistanceToLevel
+    else if closeLowPrice > close - secondDistanceToLevel
         middleTableColor
     table.cell(table_id = panel, column = 0, row = 3, text = "🔽", text_color = textColor, bgcolor = bgColorL)
     table.cell(table_id = panel, column = 1, row = 3, text = "Strong low", text_color = textColor, bgcolor = bgColorL)
@@ -393,26 +386,27 @@ if barstate.islast
 
 
     if showAdditionalInfo
-        table.cell(table_id = panel, column = 1, row = 10, text = "AVG day ATR", text_color = textColor)
-        table.cell(table_id = panel, column = 2, row = 10, text = str.tostring(math.round_to_mintick(atrD1)), text_color = textColor)
+        table.cell(table_id = panel, column = 1, row = 10, text = "Avgerage hour ATR", text_color = textColor)
+        table.cell(table_id = panel, column = 2, row = 10, text = str.tostring(math.round(priceRangeAtr * 100 / close, 2)) + "%", text_color = textColor)
 
-        table.cell(table_id = panel, column = 1, row = 11, text = "Volatility, %", text_color = textColor)
-        table.cell(table_id = panel, column = 2, row = 11, text = str.tostring(math.round(volatility * 100, 2)), text_color = textColor)
+        table.cell(table_id = panel, column = 1, row = 11, text = "Max distance near level", text_color = textColor)
+        table.cell(table_id = panel, column = 2, row = 11, text = str.tostring(math.round(distanceBetweenNearLevels * 100 / close, 2)) + "%", text_color = textColor)
 
-        table.cell(table_id = panel, column = 1, row = 12, text = "Max. dist. to lvl", text_color = textColor)
-        table.cell(table_id = panel, column = 2, row = 12, text = str.tostring(math.round_to_mintick(maxDistance)), text_color = textColor)
+        table.cell(table_id = panel, column = 1, row = 12, text = "Max distance to levels", text_color = textColor)
+        table.cell(table_id = panel, column = 2, row = 12, text = str.tostring(math.round(maxDistance * 100 / close, 2)) + "%", text_color = textColor)
+
+        table.cell(table_id = panel, column = 1, row = 13, text = "Max distance to 1 level ", text_color = textColor)
+        table.cell(table_id = panel, column = 2, row = 13, text = str.format("{0,number,#.##}%", firstDistanceToLevel * 100 / close), text_color = textColor)
+
+        table.cell(table_id = panel, column = 1, row = 14, text = "Max distance to 2 level", text_color = textColor)
+        table.cell(table_id = panel, column = 2, row = 14, text = str.format("{0,number,#.##}%", secondDistanceToLevel * 100 / close), text_color = textColor)
 
     if showDebugInfo
-        table.cell(table_id = panel, column = 0, row = 18, text = "closeLowPercent", bgcolor = color.rgb(0,0,0))
-        table.cell(table_id = panel, column = 1, row = 18, text = str.tostring(closeLowPercent), bgcolor = color.aqua)
+        table.cell(table_id = panel, column = 0, row = 18, text = "1", bgcolor = color.rgb(0,0,0))
+        table.cell(table_id = panel, column = 1, row = 18, text = str.tostring(1), bgcolor = color.aqua)
 
-        table.cell(table_id = panel, column = 0, row = 19, text = "closeLowPrice", bgcolor = color.aqua)
-        table.cell(table_id = panel, column = 1, row = 19, text = str.format("{0,number,###############.###############}",closeLowPrice), bgcolor = color.aqua)
-
-        // table.cell(table_id = panel, column = 0, row = 20, text = "closeHighPrice", bgcolor = color.aqua)
-        // table.cell(table_id = panel, column = 1, row = 20, text = str.tostring(data), bgcolor = color.aqua)
-        // table.cell(table_id = panel, column = 0, row = 21, text = "mintick", bgcolor = color.aqua)
-        // table.cell(table_id = panel, column = 1, row = 21, text = str.tostring(syminfo.mintick), bgcolor = color.aqua)
+        table.cell(table_id = panel, column = 0, row = 19, text = "2", bgcolor = color.aqua)
+        table.cell(table_id = panel, column = 1, row = 19, text = str.tostring(2), bgcolor = color.aqua)
 //#endregion =========================================================
 
 //#region Description panel ==========================================================
@@ -422,7 +416,7 @@ var table descPanel = table.new(
   columns = 2,
   rows = 10)
 
-if barstate.islast
+if barstate.islast and showLegends
     table.cell(table_id = descPanel, column = 0, row = 0, text = "Legends", text_color = textColor, text_halign = text.align_center)
     table.cell(table_id = descPanel, column = 1, row = 0, bgcolor = tableBgColor)
     table.merge_cells(table_id = descPanel, start_column = 0, start_row = 0, end_column = 1, end_row = 0)
