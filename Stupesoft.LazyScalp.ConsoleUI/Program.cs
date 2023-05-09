@@ -12,6 +12,7 @@ using Stupesoft.LazyScalp.Shared;
 using Stupesoft.LazyScalp.Shared.Abstractions;
 using Stupesoft.LazyScalp.Shared.Configurations;
 using Stupesoft.LazyScalp.Shared.Services;
+using Stupesoft.LazyScalp.Shared.Services.DataBinder;
 using Stupesoft.LazyScalp.TradingView;
 
 Console.WriteLine("Starting...");
@@ -28,6 +29,7 @@ using IHost host = Host.CreateDefaultBuilder(args)
         .AddSingleton<INotificaitonRepository, NotificationRepository>()
         .AddSingleton<INotificationManager, NotificationManager>()
         .AddSingleton<IInstrumentAnslyzer, InstrumentAnalyzer>()
+        .AddSingleton<IIndicatorDataBinder, IndicatorDataBinder>()
         .AddSingleton<ISender, Sender>()
         .AddSingleton<IFinInstrumentRepository, FinInstrumentRepository>()
         .AddSingleton<IDateTimeProvider, DateTimeProvider>()

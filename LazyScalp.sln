@@ -14,11 +14,16 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Indicator", "Indicator", "{68CF155F-0E01-4EDB-838C-5A7E24DDBE23}"
 	ProjectSection(SolutionItems) = preProject
 		Indicator\LScalp.pinescript = Indicator\LScalp.pinescript
+		Indicator\Serializer.pinescript = Indicator\Serializer.pinescript
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stupesoft.LazyScalp.TradingView", "Stupesoft.LazyScalp.TradingView\Stupesoft.LazyScalp.TradingView.csproj", "{0E4DDF24-002D-4A0D-895F-B8520DDB6F97}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stupesoft.LazyScalp.Shared", "Stupesoft.LazyScalp.Shared\Stupesoft.LazyScalp.Shared.csproj", "{BCA2F584-A19A-4523-B9C8-7528731913F0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stupesoft.LazyScalp.TradingBot", "Stupesoft.LazyScalp.TradingBot\Stupesoft.LazyScalp.TradingBot.csproj", "{7167209C-3CBB-4C30-AC51-5D876598B606}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stupesoft.LazyScalp.TradingBotConsoleUI", "Stupesoft.LazyScalp.TradingBotConsoleUI\Stupesoft.LazyScalp.TradingBotConsoleUI.csproj", "{F7883AF6-6FFF-4644-9062-81B33E61B04C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -50,6 +55,14 @@ Global
 		{BCA2F584-A19A-4523-B9C8-7528731913F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BCA2F584-A19A-4523-B9C8-7528731913F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BCA2F584-A19A-4523-B9C8-7528731913F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7167209C-3CBB-4C30-AC51-5D876598B606}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7167209C-3CBB-4C30-AC51-5D876598B606}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7167209C-3CBB-4C30-AC51-5D876598B606}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7167209C-3CBB-4C30-AC51-5D876598B606}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7883AF6-6FFF-4644-9062-81B33E61B04C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7883AF6-6FFF-4644-9062-81B33E61B04C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7883AF6-6FFF-4644-9062-81B33E61B04C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7883AF6-6FFF-4644-9062-81B33E61B04C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

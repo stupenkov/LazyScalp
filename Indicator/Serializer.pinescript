@@ -1,0 +1,34 @@
+// Author: Anton Stupenkov
+// Email: stupean@gmail.com
+// © stupean
+
+//@version=5
+
+// @description Data serialization
+library("Serializer", true)
+
+bytesToColor(array<int> bytes) =>
+	int size = bytes.size()
+    array<color> colors = array.new<color>()
+    for int i = 0 to math.ceil(size / 3) - 1
+        int index1 = i * 3 + 0
+        int byte1 = index1 < size ? bytes.get(index1) : 0
+        int index2 = i * 3 + 1
+        int byte2 = index2 < size ? bytes.get(index2) : 0
+        int index3 = i * 3 + 2
+        int byte3 = index3 < size ? bytes.get(index3) : 0
+        colors.push(color.rgb(byte1, byte2, byte3))
+    colors   
+
+export serializeToBytes(string value) =>
+    string codeSymbols = "                                 !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+	array<int> bytes = array.new<int>(0,0)
+    for i = 0 to str.length(value) - 1
+        string symbol = str.substring(value, i, i + 1)
+        int code = str.pos(codeSymbols, symbol)
+        bytes.push(code)
+	bytes
+
+export serializeToColors(string value) =>
+    array<int> bytes = serializeToBytes(value)
+    bytesToColor(bytes)
