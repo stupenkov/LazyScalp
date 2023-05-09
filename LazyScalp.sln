@@ -15,6 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Indicator", "Indicator", "{
 	ProjectSection(SolutionItems) = preProject
 		Indicator\LScalp.pinescript = Indicator\LScalp.pinescript
 		Indicator\Serializer.pinescript = Indicator\Serializer.pinescript
+		Indicator\ScalpingLevelLite.pinescript = Indicator\ScalpingLevelLite.pinescript
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stupesoft.LazyScalp.TradingView", "Stupesoft.LazyScalp.TradingView\Stupesoft.LazyScalp.TradingView.csproj", "{0E4DDF24-002D-4A0D-895F-B8520DDB6F97}"
