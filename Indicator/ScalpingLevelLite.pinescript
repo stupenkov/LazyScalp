@@ -5,7 +5,7 @@
 // © stupean
 
 //@version=5
-indicator("Scalping level [Lite] 1.0.0", overlay = true, max_lines_count = 500)
+indicator("Scalping level [Lite] 1.0.1", overlay = true, max_lines_count = 500)
 import stupean/HLevel/1 as HLevel
 
 //#region INPUTS ============================================
@@ -35,6 +35,7 @@ int breakLevelWidth = input.int(defval = 1, title = "Width", minval =  1, maxval
 // Common
 float maxLevelDistanceCoef = input.float(defval = 10, title = "Max distance to level", group = "common")
 string priceShowOptions = input.string(defval = size.normal, options = [size.huge, size.normal, size.small, size.tiny, "none"], title = "Price text on chart", group = "common")
+bool showLabel = input.bool(defval = true, title = "Show label")
 
 //#endregion
 
@@ -92,9 +93,8 @@ var table panel = table.new(
   position = position.bottom_left,
   columns = 1,
   rows = 5)
-float maxPrice = close + priceRange
-float minPrice = close - priceRange
-if barstate.islast
+
+if showLabel and barstate.islast
     table.cell(table_id = panel, column = 0, row = 0, text = "TOP CRYPTO SCREENER: https://t.me/LazyScalp", bgcolor = color.rgb(152, 154, 161), text_color = color.black)
     table.cell(table_id = panel, column = 0, row = 3, text = " ")
 //#endregion
