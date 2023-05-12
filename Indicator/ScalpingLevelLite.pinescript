@@ -5,7 +5,7 @@
 // © stupean
 
 //@version=5
-indicator("Scalping level [Lite] 1.0.1", overlay = true, max_lines_count = 500)
+indicator("Scalping level [Lite] 1.1.0", overlay = true, max_lines_count = 500)
 import stupean/HLevel/1 as HLevel
 
 //#region INPUTS ============================================
@@ -35,8 +35,13 @@ int breakLevelWidth = input.int(defval = 1, title = "Width", minval =  1, maxval
 // Common
 float maxLevelDistanceCoef = input.float(defval = 10, title = "Max distance to level", group = "common")
 string priceShowOptions = input.string(defval = size.normal, options = [size.huge, size.normal, size.small, size.tiny, "none"], title = "Price text on chart", group = "common")
-bool showLabel = input.bool(defval = true, title = "Show label")
 
+// Visual
+bool showLabel = input.bool(defval = true, title = "Show label", group = "visual")
+bool showCorrelation = input.bool(defval = true, title = "Correlation threshold", inline = "correlation", group = "visual")
+float correlationThreshold = input.float(defval = 0.5, title = "", inline = "correlation", group = "visual")
+bool showNatr = input.bool(defval = true, title = "Natr",  group = "visual")
+bool showPriceChange = input.bool(defval = true, title = "Price change",  group = "visual")
 //#endregion
 
 //#region CONSTANTS ============================================
@@ -59,7 +64,17 @@ float priceRange = priceRangeAtr * maxLevelDistanceCoef
 var HLevel.levelsClass levels = HLevel.levelsClass.new()
 var HLevel.levelDrawerClass drawer = HLevel.levelDrawerClass.new()
 var bool isInit = false
+color tableBgColor = #363636
+color successColor = color.green
+color faildColor = color.red
+color tableTextColor = color.white
 //#endregion
+
+//#region INDICATORS =================================================================
+float natr = request.security(syminfo.ticker, "5", ta.ema(ta.tr(true), 14) / close)
+float correlation = ta.correlation(request.security("BINANCE:BTCUSDT.P", "5", close), request.security(syminfo.ticker, "5", close), 20)
+float priceChange = (request.security(syminfo.ticker, "D", close) - request.security(syminfo.ticker, "D", open)) / close
+//#endregion =========================================================================
 
 //#region INITIALIZATION =================================================================
 if not isInit
@@ -88,13 +103,33 @@ levels.update(pivots, priceRange)
 drawer.draw(levels.getAll())
 //#endregion
 
-//#region DISLPLAY INFORMATION ============================================
-var table panel = table.new(
+//#region DISLPLAY LOGO ============================================
+var table logoPanel = table.new(
   position = position.bottom_left,
   columns = 1,
   rows = 5)
 
 if showLabel and barstate.islast
-    table.cell(table_id = panel, column = 0, row = 0, text = "TOP CRYPTO SCREENER: https://t.me/LazyScalp", bgcolor = color.rgb(152, 154, 161), text_color = color.black)
-    table.cell(table_id = panel, column = 0, row = 3, text = " ")
+    table.cell(table_id = logoPanel, column = 0, row = 0, text = "TOP CRYPTO SCREENER: https://t.me/LazyScalp", bgcolor = color.rgb(152, 154, 161), text_color = color.black)
+    table.cell(table_id = logoPanel, column = 0, row = 3, text = " ")
+//#endregion
+
+//#region DISLPLAY INDICATORS ============================================
+var table indicatorPanel = table.new(
+  position = position.top_right,
+  columns = 2,
+  rows = 5)
+
+if barstate.islast
+    if showCorrelation
+        color correlationColor = correlation < correlationThreshold ? successColor : tableBgColor 
+        table.cell(table_id = indicatorPanel, column = 0, row = 0, text = "🔀", bgcolor = correlationColor, text_color = tableTextColor, tooltip = "BTC correlation")
+        table.cell(table_id = indicatorPanel, column = 1, row = 0, text = str.format("{0,number,#.##}", correlation), bgcolor = correlationColor, text_color = tableTextColor, tooltip = "BTC correlation")
+    if showNatr
+        table.cell(table_id = indicatorPanel, column = 0, row = 1, text = "⚡", bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "NATR")
+        table.cell(table_id = indicatorPanel, column = 1, row = 1, text = str.format("{0,number,#.##}%", natr * 100), bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "NATR")
+    if showPriceChange
+        color priceColor = priceChange > 0 ? successColor : priceChange < 0 ? faildColor : tableBgColor
+        table.cell(table_id = indicatorPanel, column = 0, row = 2, text = "📐", bgcolor = priceColor, text_color = tableTextColor, tooltip = "Price change")
+        table.cell(table_id = indicatorPanel, column = 1, row = 2, text = str.format("{0,number,#.##}%", priceChange * 100), bgcolor = priceColor, text_color = tableTextColor, tooltip = "Price change")
 //#endregion
