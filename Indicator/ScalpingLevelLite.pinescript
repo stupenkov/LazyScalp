@@ -5,7 +5,7 @@
 // © stupean
 
 //@version=5
-indicator("Scalping level [Lite] 1.1.1", overlay = true, max_lines_count = 500)
+indicator("Scalping level [Lite] 1.2.0", overlay = true, max_lines_count = 500)
 import stupean/HLevel/1 as HLevel
 
 //#region INPUTS ============================================
@@ -33,7 +33,7 @@ color breakLevelColor = input.color(defval = color.new(color.gray, 70), title = 
 int breakLevelWidth = input.int(defval = 1, title = "Width", minval =  1, maxval =  10, step =  1, inline="breakStyle", group = "break level")
 
 // Common
-float maxLevelDistanceCoef = input.float(defval = 10, title = "Max distance to level", group = "common")
+float maxLevelDistanceCoef = input.float(defval = 0.7, title = "Max distance to level", group = "common")
 string priceShowOptions = input.string(defval = size.normal, options = [size.huge, size.normal, size.small, size.tiny, "none"], title = "Price text on chart", group = "common")
 
 // Visual
@@ -60,7 +60,7 @@ int middleLevelLifetimeBars = math.floor(middleLevelLifetimeSeconds / secondsInC
 int globalLevelLifetimeBars = math.floor(globalLevelLifetimeSeconds / secondsInCurrentPeriod)
 int breakLevelLifetimeBars = math.floor(breakLevelLifetimeSeconds / secondsInCurrentPeriod)
 float priceRangeAtr = request.security(syminfo.ticker, "60", ta.atr(24))
-float priceRange = priceRangeAtr * maxLevelDistanceCoef
+float priceRange = priceRangeAtr * (math.sqrt(secondsInCurrentPeriod / 10) * maxLevelDistanceCoef)
 var HLevel.levelsClass levels = HLevel.levelsClass.new()
 var HLevel.levelDrawerClass drawer = HLevel.levelDrawerClass.new()
 var bool isInit = false
