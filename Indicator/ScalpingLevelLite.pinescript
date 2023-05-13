@@ -5,24 +5,24 @@
 // © stupean
 
 //@version=5
-indicator("Scalping level [Lite] 1.1.0", overlay = true, max_lines_count = 500)
+indicator("Scalping level [Lite] 1.1.1", overlay = true, max_lines_count = 500)
 import stupean/HLevel/1 as HLevel
 
 //#region INPUTS ============================================
 // Local level
-int localLevelPeriodSeconds = input.int(defval = 60, title = "Period, min", group = "local level") * 60
+int localLevelPeriodLegSeconds = input.int(defval = 60, title = "Period, min", group = "local level") * 60 / 2
 int localLevelLifetimeSeconds = input.int(defval = 72, title = "Lifetime, hour", group = "local level", tooltip = "0 - infinity") * 3600
 color localLevelColor = input.color(defval = #3179f5, title = "Color", inline = "localStyle", group = "local level")
 int localLevelWidth = input.int(defval = 1, title = "Width", minval = 1, maxval = 10, step = 1, inline = "localStyle", group = "local level")
 
 // Middle level
-int middleLevelPeriodSeconds = input.int(defval = 240, title = "Period, min", group = "middle level") * 60
+int middleLevelPeriodLegSeconds = input.int(defval = 480, title = "Period, min", group = "middle level") * 60 / 2
 int middleLevelLifetimeSeconds = input.int(defval = 240, title = "Lifetime, hour", group = "middle level", tooltip = "0 - infinity") * 3600
 color middleLevelColor = input.color(defval = color.lime, title = "Color", inline = "middleStyle", group = "middle level")
 int middleLevelWidth = input.int(defval = 1, title = "Width", minval = 1, maxval = 10, step = 1, inline = "middleStyle", group = "middle level")
 
 // Global level
-int globalLevelPeriodSeconds = input.int(defval = 1440, title = "Period, min", group = "global level") * 60
+int globalLevelPeriodLegSeconds = input.int(defval = 2880, title = "Period, min", group = "global level") * 60 / 2
 int globalLevelLifetimeSeconds = input.int(defval = 0, title = "Lifetime, hour", group = "global level", tooltip = "0 - infinity") * 3600
 color globalLevelColor = input.color(defval = color.red, title = "Color", inline = "globalStyle", group = "global level")
 int globalLevelWidth = input.int(defval = 1, title = "Width", minval = 1, maxval = 10, step = 1, inline = "globalStyle", group = "global level")
@@ -95,9 +95,9 @@ if not isInit
 //#region MAIN LOOP =================================================================
 HLevel.pivotsList pivots = HLevel.pivotsList.new()
 pivots.init(secondsInCurrentPeriod)
-pivots.add(LOCAL_PERIOD, localLevelPeriodSeconds)
-pivots.add(MIDDLE_PERIOD, middleLevelPeriodSeconds)
-pivots.add(GLOBAL_PERIOD, globalLevelPeriodSeconds)
+pivots.add(LOCAL_PERIOD, localLevelPeriodLegSeconds)
+pivots.add(MIDDLE_PERIOD, middleLevelPeriodLegSeconds)
+pivots.add(GLOBAL_PERIOD, globalLevelPeriodLegSeconds)
 
 levels.update(pivots, priceRange)
 drawer.draw(levels.getAll())
