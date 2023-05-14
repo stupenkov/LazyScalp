@@ -63,6 +63,10 @@ public class MainHostedService : BackgroundService
                     var signals = await _instrumentAnslyzer.AnalyzeAsync(instrument);
                     await _sender.SendAsync(signals, instrument);
                 }
+                else
+                {
+                    _logger.LogInformation("The instrument has filtered.");
+                }
             }
             catch (Exception e)
             {

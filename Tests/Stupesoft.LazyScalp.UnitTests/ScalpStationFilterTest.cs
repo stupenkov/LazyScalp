@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using Moq;
 using Stupesoft.LazeScallp.Application.Abstractions;
 using Stupesoft.LazeScallp.Application.ScalpStations;
@@ -20,6 +21,17 @@ public class ScalpStationFilterTest
             new SSInstruments {Symbol = "ETHUSDT" },
         };
 
+        var scalpStationOptions = new ScalpStationOptions
+        {
+            Filters =
+            {
+                new ScalpStationOptions.FilterOptions{Period = "", SortType = ScalpStation.SortType.Trades, Top = 1}
+            }
+        };
+
+        var scalpStationOptionsMock = new Mock<IOptions<ScalpStationOptions>>();
+        scalpStationOptionsMock.Setup(x => x.Value).Returns(scalpStationOptions);
+
         var scalpStationMock = new Mock<IScalpStation>();
         scalpStationMock.Setup(x => x.GetInstrumentsAsync(It.IsAny<int>(), It.IsAny<ScalpStation.SortType>(), It.IsAny<string>()))
             .ReturnsAsync(instrumentList);
@@ -29,7 +41,8 @@ public class ScalpStationFilterTest
             .Returns<string>(x => x + ".P");
 
         // Act
-        var filter = new ScalpStationFilter(scalpStationMock.Object, converterMock.Object);
+        var filter = new ScalpStationFilter(scalpStationMock.Object, converterMock.Object, scalpStationOptionsMock.Object);
+        await filter.UpdateAsync();
         var result = await filter.FilterAsync(new FinInstrument { Ticker = filteredSymbol });
 
         // Assert

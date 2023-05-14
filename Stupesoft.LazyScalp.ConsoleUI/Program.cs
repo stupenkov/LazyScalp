@@ -31,7 +31,7 @@ using IHost host = Host.CreateDefaultBuilder(args)
         .Configure<ApplicationOptions>(hostContext.Configuration.GetSection(ApplicationOptions.SectionName))
         .Configure<ScalpStationOptions>(hostContext.Configuration.GetSection(ScalpStationOptions.SectionName))
         .AddSingleton<ITickerSymbolConverter, TickerSymbolConverter>()
-        .AddSingleton<IScalpStation, ScalpStation>(x=> ScalpStation.Create(x.GetRequiredService<IOptions<ScalpStationOptions>>()))
+        .AddSingleton<IScalpStation, ScalpStation>(x => ScalpStation.Create(x.GetRequiredService<IOptions<ScalpStationOptions>>()))
         .AddSingleton<IInstrumentFilter, ScalpStationFilter>()
         .AddSingleton<INotificaitonRepository, NotificationRepository>()
         .AddSingleton<INotificationManager, NotificationManager>()
@@ -49,4 +49,3 @@ using IHost host = Host.CreateDefaultBuilder(args)
     .Build();
 
 await host.RunAsync();
-
