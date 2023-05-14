@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stupesoft.LazyScalp.Domain"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stupesoft.LazyScalp.ConsoleUI", "Stupesoft.LazyScalp.ConsoleUI\Stupesoft.LazyScalp.ConsoleUI.csproj", "{F4F56237-B7AE-463E-AB1D-DDA7630C01D2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stupesoft.LazeScallp.Application", "Stupesoft.LazeScallp.Application\Stupesoft.LazeScallp.Application.csproj", "{90235886-BB77-4027-94E3-B39E9B7093BF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stupesoft.LazyScalp.Application", "Stupesoft.LazeScallp.Application\Stupesoft.LazyScalp.Application.csproj", "{90235886-BB77-4027-94E3-B39E9B7093BF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Indicator", "Indicator", "{68CF155F-0E01-4EDB-838C-5A7E24DDBE23}"
 	ProjectSection(SolutionItems) = preProject
@@ -30,6 +30,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{6D328013-C7D7-456A-93B5-3B4AECEBA1BC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScalpStations.IntegrationTests", "Tests\ScalpStation.UnitTests\ScalpStations.IntegrationTests.csproj", "{874C7CEA-9E48-456A-B724-9C81702E861E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stupesoft.LazyScalp.UnitTests", "Tests\Stupesoft.LazyScalp.UnitTests\Stupesoft.LazyScalp.UnitTests.csproj", "{1072C52A-C34A-4B85-81F6-B0DA3EA2F904}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -73,12 +75,17 @@ Global
 		{874C7CEA-9E48-456A-B724-9C81702E861E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{874C7CEA-9E48-456A-B724-9C81702E861E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{874C7CEA-9E48-456A-B724-9C81702E861E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1072C52A-C34A-4B85-81F6-B0DA3EA2F904}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1072C52A-C34A-4B85-81F6-B0DA3EA2F904}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1072C52A-C34A-4B85-81F6-B0DA3EA2F904}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1072C52A-C34A-4B85-81F6-B0DA3EA2F904}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{874C7CEA-9E48-456A-B724-9C81702E861E} = {6D328013-C7D7-456A-93B5-3B4AECEBA1BC}
+		{1072C52A-C34A-4B85-81F6-B0DA3EA2F904} = {6D328013-C7D7-456A-93B5-3B4AECEBA1BC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {117981CF-6A59-45B3-950B-EC5728593003}

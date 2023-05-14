@@ -2,5 +2,5 @@
 
 public class SSInstruments
 {
-    public string? Symbol { get; set; }
+    public string Symbol { get; set; } = string.Empty;
 }

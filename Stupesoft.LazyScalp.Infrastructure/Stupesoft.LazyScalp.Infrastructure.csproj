@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Stupesoft.LazeScallp.Application\Stupesoft.LazeScallp.Application.csproj" />
+    <ProjectReference Include="..\Stupesoft.LazeScallp.Application\Stupesoft.LazyScalp.Application.csproj" />
     <ProjectReference Include="..\Stupesoft.LazyScalp.Domain\Stupesoft.LazyScalp.Domain.csproj" />
     <ProjectReference Include="..\Stupesoft.LazyScalp.Shared\Stupesoft.LazyScalp.Shared.csproj" />
   </ItemGroup>

@@ -3,7 +3,7 @@
 public class FinInstrument
 {
     public int Id { get; set; }
-    public string? Ticker { get; set; }
+    public string Ticker { get; set; } = string.Empty;
     public List<Data> HistoryData { get; set; } = new();
     public DateTime? HighDetectionLevelTime { get; set; }
     public DateTime? LowDetectionLevelTime { get; set; }
