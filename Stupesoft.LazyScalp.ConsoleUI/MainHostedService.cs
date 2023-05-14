@@ -13,6 +13,7 @@ public class MainHostedService : BackgroundService
     private readonly IFinInstrumentRepository _finInstrumentRepository;
     private readonly IInstrumentDataExtractor _instrumentDataExtractor;
     private readonly IFinInstrumentManager _finInstrumentManager;
+    private readonly IInstrumentFilter _instrumentFilter;
     private readonly IDateTimeProvider _dateTimeProvider;
     private readonly IInstrumentAnslyzer _instrumentAnslyzer;
     private readonly ISender _sender;
@@ -26,11 +27,13 @@ public class MainHostedService : BackgroundService
         ITradingViewAPI tradingViewAPI,
         IFinInstrumentRepository finInstrumentRepository,
         IFinInstrumentManager finInstrumentManager,
+        IInstrumentFilter instrumentFilter,
         ILogger<MainHostedService> logger)
     {
         _tradingViewAPI = tradingViewAPI;
         _finInstrumentRepository = finInstrumentRepository;
         _finInstrumentManager = finInstrumentManager;
+        _instrumentFilter = instrumentFilter;
         _dateTimeProvider = dateTimeProvider;
         _instrumentAnslyzer = instrumentAnslyzer;
         _instrumentDataExtractor = instrumentDataExtractor;
@@ -40,6 +43,11 @@ public class MainHostedService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        _tradingViewAPI.Scaner.BeforeRunCycle += async () =>
+        {
+            await _instrumentFilter.UpdateAsync();
+        };
+
         _tradingViewAPI.Scaner.InstrumentReady += async (instrumentTV) =>
         {
             try
@@ -50,8 +58,11 @@ public class MainHostedService : BackgroundService
                 instrument ??= _finInstrumentManager.Create(instrumentTV.Ticker!);
                 _finInstrumentManager.AddData(instrument, instrumentData);
                 await _finInstrumentRepository.AddOrUpdateAsync(instrument);
-                var signals = await _instrumentAnslyzer.AnalyzeAsync(instrument);
-                await _sender.SendAsync(signals, instrument);
+                if (await _instrumentFilter.FilterAsync(instrument))
+                {
+                    var signals = await _instrumentAnslyzer.AnalyzeAsync(instrument);
+                    await _sender.SendAsync(signals, instrument);
+                }
             }
             catch (Exception e)
             {

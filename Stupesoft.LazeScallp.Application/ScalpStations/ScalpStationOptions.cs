@@ -2,5 +2,6 @@
 
 public class ScalpStationOptions
 {
-    public string Url { get; set; }
+    public const string SectionName = "ScalpStation";
+    public string Url { get; set; } = string.Empty;
 }

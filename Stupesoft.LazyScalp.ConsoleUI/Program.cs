@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Stupesoft.LazeScallp.Application.Abstractions;
 using Stupesoft.LazeScallp.Application.Configurations;
+using Stupesoft.LazeScallp.Application.ScalpStations;
 using Stupesoft.LazeScallp.Application.Servicies;
 using Stupesoft.LazyScalp.ConsoleUI;
 using Stupesoft.LazyScalp.Domain.FinInstruments;
@@ -22,10 +24,15 @@ using IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext, services) => services
         .AddHostedService<MainHostedService>()
         .AddHostedService<UIHostedService>()
+        .AddOptions()
         .Configure<ImagePreparationOptions>(hostContext.Configuration.GetSection(ImagePreparationOptions.SectionName))
         .Configure<TelegramBotOptions>(hostContext.Configuration.GetSection(TelegramBotOptions.SectionName))
         .Configure<IndicatorOptions>(hostContext.Configuration.GetSection(IndicatorOptions.SectionName))
         .Configure<ApplicationOptions>(hostContext.Configuration.GetSection(ApplicationOptions.SectionName))
+        .Configure<ScalpStationOptions>(hostContext.Configuration.GetSection(ScalpStationOptions.SectionName))
+        .AddSingleton<ITickerSymbolConverter, TickerSymbolConverter>()
+        .AddSingleton<IScalpStation, ScalpStation>(x=> ScalpStation.Create(x.GetRequiredService<IOptions<ScalpStationOptions>>()))
+        .AddSingleton<IInstrumentFilter, ScalpStationFilter>()
         .AddSingleton<INotificaitonRepository, NotificationRepository>()
         .AddSingleton<INotificationManager, NotificationManager>()
         .AddSingleton<IInstrumentAnslyzer, InstrumentAnalyzer>()

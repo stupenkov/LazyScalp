@@ -8,6 +8,7 @@ public class ScalpStationFilter : IInstrumentFilter
 {
     private readonly IScalpStation _scalpStation;
     private readonly ITickerSymbolConverter _tickerSymbolConverter;
+    private List<SSInstruments> _instruments = new List<SSInstruments>();
 
     public ScalpStationFilter(IScalpStation scalpStation, ITickerSymbolConverter tickerSymbolConverter)
     {
@@ -15,13 +16,18 @@ public class ScalpStationFilter : IInstrumentFilter
         _tickerSymbolConverter = tickerSymbolConverter;
     }
 
-    public async Task<bool> FilterAsync(FinInstrument instrument)
+    public Task<bool> FilterAsync(FinInstrument instrument)
     {
-        var scalpStationList = await _scalpStation.GetInstrumentsAsync(16, SortType.Trades, "15m");
-
-        return scalpStationList
+        bool result = _instruments
             .Select(x => _tickerSymbolConverter.ConvertToTradingViewFeatureSymbol(x.Symbol))
             .Select(x => x.ToUpper())
             .Any(x => x == instrument.Ticker.ToUpper());
+
+        return Task.FromResult(result);
+    }
+
+    public async Task UpdateAsync()
+    {
+        _instruments = await _scalpStation.GetInstrumentsAsync(16, SortType.Trades, "15m");
     }
 }

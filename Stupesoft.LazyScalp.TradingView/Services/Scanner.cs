@@ -38,6 +38,7 @@ internal class Scanner : IScanner
 
     public event Action? CompletedCycle;
     public event Action<FinInstrumentTV>? InstrumentReady;
+    public event Action? BeforeRunCycle;
 
     public async Task RunAsync(CancellationToken stoppingToken)
     {
@@ -68,6 +69,7 @@ internal class Scanner : IScanner
     }
     private async Task<int> Init()
     {
+        BeforeRunCycle?.Invoke();
         await RefreshPageAsync();
 
         int count = await _tradingView.CountScreenerInstrumentsAsync();
