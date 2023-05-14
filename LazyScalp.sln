@@ -15,17 +15,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Indicator", "Indicator", "{
 	ProjectSection(SolutionItems) = preProject
 		Indicator\HLevel.lib.pinescript = Indicator\HLevel.lib.pinescript
 		Indicator\ScalpingLevelLite.pinescript = Indicator\ScalpingLevelLite.pinescript
-		Indicator\Serializer.pinescript = Indicator\Serializer.pinescript
 		Indicator\ScalpingLevelPRO.pinescript = Indicator\ScalpingLevelPRO.pinescript
+		Indicator\Serializer.pinescript = Indicator\Serializer.pinescript
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stupesoft.LazyScalp.TradingView", "Stupesoft.LazyScalp.TradingView\Stupesoft.LazyScalp.TradingView.csproj", "{0E4DDF24-002D-4A0D-895F-B8520DDB6F97}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stupesoft.LazyScalp.Shared", "Stupesoft.LazyScalp.Shared\Stupesoft.LazyScalp.Shared.csproj", "{BCA2F584-A19A-4523-B9C8-7528731913F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stupesoft.LazyScalp.TradingBot", "Stupesoft.LazyScalp.TradingBot\Stupesoft.LazyScalp.TradingBot.csproj", "{7167209C-3CBB-4C30-AC51-5D876598B606}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stupesoft.LazyScalp.TradingBot", "Stupesoft.LazyScalp.TradingBot\Stupesoft.LazyScalp.TradingBot.csproj", "{7167209C-3CBB-4C30-AC51-5D876598B606}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stupesoft.LazyScalp.TradingBotConsoleUI", "Stupesoft.LazyScalp.TradingBotConsoleUI\Stupesoft.LazyScalp.TradingBotConsoleUI.csproj", "{F7883AF6-6FFF-4644-9062-81B33E61B04C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stupesoft.LazyScalp.TradingBotConsoleUI", "Stupesoft.LazyScalp.TradingBotConsoleUI\Stupesoft.LazyScalp.TradingBotConsoleUI.csproj", "{F7883AF6-6FFF-4644-9062-81B33E61B04C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{6D328013-C7D7-456A-93B5-3B4AECEBA1BC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScalpStations.IntegrationTests", "Tests\ScalpStation.UnitTests\ScalpStations.IntegrationTests.csproj", "{874C7CEA-9E48-456A-B724-9C81702E861E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,9 +69,16 @@ Global
 		{F7883AF6-6FFF-4644-9062-81B33E61B04C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F7883AF6-6FFF-4644-9062-81B33E61B04C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F7883AF6-6FFF-4644-9062-81B33E61B04C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{874C7CEA-9E48-456A-B724-9C81702E861E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{874C7CEA-9E48-456A-B724-9C81702E861E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{874C7CEA-9E48-456A-B724-9C81702E861E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{874C7CEA-9E48-456A-B724-9C81702E861E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{874C7CEA-9E48-456A-B724-9C81702E861E} = {6D328013-C7D7-456A-93B5-3B4AECEBA1BC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {117981CF-6A59-45B3-950B-EC5728593003}
