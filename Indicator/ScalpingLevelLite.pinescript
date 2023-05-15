@@ -6,7 +6,7 @@
 
 //@version=5
 indicator("Scalping level [Lite] 1.2.0", overlay = true, max_lines_count = 500)
-import stupean/HLevel/29 as HLevel
+import stupean/HLevel/40 as HLevel
 
 //#region INPUTS ============================================
 // Local level
@@ -74,6 +74,26 @@ color tableBgColor = #363636
 color successColor = color.green
 color faildColor = color.red
 color tableTextColor = color.white
+
+// price distance labels
+var label highLevelPriceLabel = label.new(bar_index, high, style = label.style_label_left, textcolor = color.white)
+var label lowLevelPriceLabel = label.new(bar_index, low, style = label.style_label_left, textcolor = color.white)
+//#endregion
+
+//#region FUNCTIONS ============================================
+updatePriceDistanceLabel(label lbl, HLevel.level lvl, float labelOffset, color clr, color defaultClr) => 
+    float distance = -1
+    if not na(lvl)
+        distance := math.abs(lvl.price - close) / close
+
+    string formatted = "-----"
+    if distance >= 0 and distance < 1
+        formatted := str.format("{0,number,#.##}%", distance * 100)
+
+    lbl.set_x(bar_index + 15)
+    lbl.set_y(close + labelOffset * (math.sqrt(secondsInCurrentPeriod / 10)) / 15)
+    lbl.set_text(formatted)
+    lbl.set_color(distance < 0 ? defaultClr : clr)
 //#endregion
 
 //#region INDICATORS =================================================================
@@ -106,6 +126,11 @@ pivots.add(MIDDLE_PERIOD, middleLevelPeriodLegSeconds)
 pivots.add(GLOBAL_PERIOD, globalLevelPeriodLegSeconds)
 
 levels.update(pivots, priceRange, nearLevelValue)
+// draw price distancies
+[highLevel, lowLevel] = levels.getNearStrongLevels()
+updatePriceDistanceLabel(highLevelPriceLabel, highLevel, priceRangeAtr, color.green, color.new(color.gray, 60))
+updatePriceDistanceLabel(lowLevelPriceLabel, lowLevel, -priceRangeAtr, color.red, color.new(color.gray, 60))
+
 drawer.draw(levels)
 //#endregion
 
