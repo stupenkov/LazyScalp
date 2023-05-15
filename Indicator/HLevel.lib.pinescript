@@ -6,7 +6,7 @@
 
 //@version=5
 
-// @description v1.1.0
+// @description v1.2.0
 library("HLevel", true)
 
 //#region CONSTANTS ============================================
@@ -185,6 +185,27 @@ export method update(levelsClass this, pivotsList pivots, float priceRange, floa
         this.markStrongLevels(lvl, nextLevelIndex, distanceBetweenNearLevels)
         
         counter += 1
+
+export method getNearStrongLevels(levelsClass this) =>
+    level highLevel = na
+    level lowLevel = na
+    if this.size() > 0
+        for i = 0 to this.size() - 1
+            level lvl = this.get(i)
+            if not lvl.hasNearLevel
+                continue
+            if lvl.side == SIDE_HIGH 
+                if na(highLevel)
+                    highLevel := lvl
+                else if lvl.price < highLevel.price
+                    highLevel := lvl
+            else if lvl.side == SIDE_LOW 
+                if na(lowLevel)
+                    lowLevel := lvl
+                else if lvl.price > lowLevel.price
+                    lowLevel := lvl
+
+    [highLevel, lowLevel] 
 //#endregion
 
 //#region CLASS Drawer ============================================
