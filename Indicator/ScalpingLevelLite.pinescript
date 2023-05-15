@@ -45,7 +45,7 @@ string priceShowOptions = input.string(defval = size.normal, options = [size.hug
 color defaultPriceColor = input.color(defval = color.white, title = "Color", group = "price")
 
 // Visual
-bool showLabel = input.bool(defval = true, title = "Show label", group = "visual")
+bool showLogo = input.bool(defval = true, title = "Show logo", group = "visual")
 bool showCorrelation = input.bool(defval = true, title = "Correlation threshold", inline = "correlation", group = "visual")
 float correlationThreshold = input.float(defval = 0.5, title = "", inline = "correlation", group = "visual")
 bool showNatr = input.bool(defval = true, title = "Natr",  group = "visual")
@@ -143,7 +143,7 @@ var table logoPanel = table.new(
   columns = 1,
   rows = 5)
 
-if showLabel and barstate.islast
+if showLogo and barstate.islast
     table.cell(table_id = logoPanel, column = 0, row = 0, text = "TOP CRYPTO SCREENER: https://t.me/LazyScalp", bgcolor = color.rgb(152, 154, 161), text_color = color.black)
     table.cell(table_id = logoPanel, column = 0, row = 3, text = " ")
 //#endregion
