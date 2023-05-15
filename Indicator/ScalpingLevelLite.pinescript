@@ -12,20 +12,20 @@ import stupean/HLevel/40 as HLevel
 // Local level
 int localLevelPeriodLegSeconds = input.int(defval = 60, title = "Period, min", group = "local level") * 60 / 2
 int localLevelLifetimeSeconds = input.int(defval = 72, title = "Lifetime, hour", group = "local level", tooltip = "0 - infinity") * 3600
-color localLevelColor = input.color(defval = #3179f5, title = "Color", inline = "localStyle", group = "local level")
+color localLevelColor = input.color(defval = color.blue, title = "Color", inline = "localStyle", group = "local level")
 int localLevelWidth = input.int(defval = 1, title = "Width", minval = 1, maxval = 10, step = 1, inline = "localStyle", group = "local level")
 
 // Middle level
 int middleLevelPeriodLegSeconds = input.int(defval = 480, title = "Period, min", group = "middle level") * 60 / 2
 int middleLevelLifetimeSeconds = input.int(defval = 240, title = "Lifetime, hour", group = "middle level", tooltip = "0 - infinity") * 3600
-color middleLevelColor = input.color(defval = color.lime, title = "Color", inline = "middleStyle", group = "middle level")
-int middleLevelWidth = input.int(defval = 1, title = "Width", minval = 1, maxval = 10, step = 1, inline = "middleStyle", group = "middle level")
+color middleLevelColor = input.color(defval = color.blue, title = "Color", inline = "middleStyle", group = "middle level")
+int middleLevelWidth = input.int(defval = 2, title = "Width", minval = 1, maxval = 10, step = 1, inline = "middleStyle", group = "middle level")
 
 // Global level
 int globalLevelPeriodLegSeconds = input.int(defval = 2880, title = "Period, min", group = "global level") * 60 / 2
 int globalLevelLifetimeSeconds = input.int(defval = 0, title = "Lifetime, hour", group = "global level", tooltip = "0 - infinity") * 3600
-color globalLevelColor = input.color(defval = color.red, title = "Color", inline = "globalStyle", group = "global level")
-int globalLevelWidth = input.int(defval = 1, title = "Width", minval = 1, maxval = 10, step = 1, inline = "globalStyle", group = "global level")
+color globalLevelColor = input.color(defval = color.blue, title = "Color", inline = "globalStyle", group = "global level")
+int globalLevelWidth = input.int(defval = 3, title = "Width", minval = 1, maxval = 10, step = 1, inline = "globalStyle", group = "global level")
 
 // Break level
 int breakLevelLifetimeSeconds = input.int(defval = 180, title = "Lifetime, min", group = "break levels") * 60
@@ -39,7 +39,10 @@ int weakLevelTransparent = input.int(defval = 85, minval = 0, maxval = 100, titl
 
 // Common
 float maxLevelDistanceCoef = input.float(defval = 0.7, title = "Max distance to level", group = "common")
-string priceShowOptions = input.string(defval = size.normal, options = [size.huge, size.normal, size.small, size.tiny, "none"], title = "Price text on chart", group = "common")
+ 
+// Price
+string priceShowOptions = input.string(defval = size.normal, options = [size.huge, size.large, size.normal, size.small, size.tiny, "none"], title = "Size", group = "price")
+color defaultPriceColor = input.color(defval = color.white, title = "Color", group = "price")
 
 // Visual
 bool showLabel = input.bool(defval = true, title = "Show label", group = "visual")
@@ -110,7 +113,7 @@ if not isInit
     levels.addLifetime(GLOBAL_PERIOD, globalLevelLifetimeBars)
     levels.addLifetime(BREAK_PERIOD, breakLevelLifetimeBars)
 
-    drawer.init(priceShowOptions = priceShowOptions, transparent = weakLevelTransparent)
+    drawer.init(priceShowOptions = priceShowOptions, transparent = weakLevelTransparent, defaultPriceColor = defaultPriceColor)
     drawer.addStyle(HLevel.lineStyle.new(localLevelWidth, localLevelColor))
     drawer.addStyle(HLevel.lineStyle.new(middleLevelWidth, middleLevelColor))
     drawer.addStyle(HLevel.lineStyle.new(globalLevelWidth, globalLevelColor))
