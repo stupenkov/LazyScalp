@@ -6,7 +6,7 @@
 
 //@version=5
 indicator("Scalping level [Lite] 1.2.0", overlay = true, max_lines_count = 500)
-import stupean/HLevel/1 as HLevel
+import stupean/HLevel/29 as HLevel
 
 //#region INPUTS ============================================
 // Local level
@@ -28,9 +28,14 @@ color globalLevelColor = input.color(defval = color.red, title = "Color", inline
 int globalLevelWidth = input.int(defval = 1, title = "Width", minval = 1, maxval = 10, step = 1, inline = "globalStyle", group = "global level")
 
 // Break level
-int breakLevelLifetimeSeconds = input.int(defval = 180, title = "Lifetime, min", group = "break level") * 60
-color breakLevelColor = input.color(defval = color.new(color.gray, 70), title = "Color",  inline = "breakStyle", group = "break level")
-int breakLevelWidth = input.int(defval = 1, title = "Width", minval =  1, maxval =  10, step =  1, inline="breakStyle", group = "break level")
+int breakLevelLifetimeSeconds = input.int(defval = 180, title = "Lifetime, min", group = "break levels") * 60
+color breakLevelColor = input.color(defval = color.new(color.gray, 70), title = "Color",  inline = "breakStyle", group = "break levels")
+int breakLevelWidth = input.int(defval = 1, title = "Width", minval =  1, maxval =  10, step =  1, inline="breakStyle", group = "break levels")
+
+// Important levels
+float nearLevelCoef = input.float(defval = 0.1, title = "Near levels coefficient", group = "important levels")
+int minNearLevels = input.int(defval = 2, minval = 1, title = "Minimun near levels", group = "important levels")
+int weakLevelTransparent = input.int(defval = 85, minval = 0, maxval = 100, title = "Weak level transparent, %", group = "important levels")
 
 // Common
 float maxLevelDistanceCoef = input.float(defval = 0.7, title = "Max distance to level", group = "common")
@@ -61,6 +66,7 @@ int globalLevelLifetimeBars = math.floor(globalLevelLifetimeSeconds / secondsInC
 int breakLevelLifetimeBars = math.floor(breakLevelLifetimeSeconds / secondsInCurrentPeriod)
 float priceRangeAtr = request.security(syminfo.ticker, "60", ta.atr(24))
 float priceRange = priceRangeAtr * (math.sqrt(secondsInCurrentPeriod / 10) * maxLevelDistanceCoef)
+float nearLevelValue = na(priceRangeAtr) ? syminfo.mintick: priceRangeAtr * nearLevelCoef
 var HLevel.levelsClass levels = HLevel.levelsClass.new()
 var HLevel.levelDrawerClass drawer = HLevel.levelDrawerClass.new()
 var bool isInit = false
@@ -78,13 +84,13 @@ float priceChange = (request.security(syminfo.ticker, "D", close) - request.secu
 
 //#region INITIALIZATION =================================================================
 if not isInit
-    levels.init()
+    levels.init(minNearLevels = minNearLevels)
     levels.addLifetime(LOCAL_PERIOD, localLevelLifetimeBars)
     levels.addLifetime(MIDDLE_PERIOD, middleLevelLifetimeBars)
     levels.addLifetime(GLOBAL_PERIOD, globalLevelLifetimeBars)
     levels.addLifetime(BREAK_PERIOD, breakLevelLifetimeBars)
 
-    drawer.init(priceShowOptions)
+    drawer.init(priceShowOptions = priceShowOptions, transparent = weakLevelTransparent)
     drawer.addStyle(HLevel.lineStyle.new(localLevelWidth, localLevelColor))
     drawer.addStyle(HLevel.lineStyle.new(middleLevelWidth, middleLevelColor))
     drawer.addStyle(HLevel.lineStyle.new(globalLevelWidth, globalLevelColor))
@@ -99,8 +105,8 @@ pivots.add(LOCAL_PERIOD, localLevelPeriodLegSeconds)
 pivots.add(MIDDLE_PERIOD, middleLevelPeriodLegSeconds)
 pivots.add(GLOBAL_PERIOD, globalLevelPeriodLegSeconds)
 
-levels.update(pivots, priceRange)
-drawer.draw(levels.getAll())
+levels.update(pivots, priceRange, nearLevelValue)
+drawer.draw(levels)
 //#endregion
 
 //#region DISLPLAY LOGO ============================================
@@ -126,10 +132,10 @@ if barstate.islast
         table.cell(table_id = indicatorPanel, column = 0, row = 0, text = "🔀", bgcolor = correlationColor, text_color = tableTextColor, tooltip = "BTC correlation")
         table.cell(table_id = indicatorPanel, column = 1, row = 0, text = str.format("{0,number,#.##}", correlation), bgcolor = correlationColor, text_color = tableTextColor, tooltip = "BTC correlation")
     if showNatr
-        table.cell(table_id = indicatorPanel, column = 0, row = 1, text = "⚡", bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "NATR")
-        table.cell(table_id = indicatorPanel, column = 1, row = 1, text = str.format("{0,number,#.##}%", natr * 100), bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "NATR")
+        table.cell(table_id = indicatorPanel, column = 0, row = 1, text = "⚡", bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "NATR (5min)")
+        table.cell(table_id = indicatorPanel, column = 1, row = 1, text = str.format("{0,number,#.##}%", natr * 100), bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "NATR (5min)")
     if showPriceChange
         color priceColor = priceChange > 0 ? successColor : priceChange < 0 ? faildColor : tableBgColor
-        table.cell(table_id = indicatorPanel, column = 0, row = 2, text = "📐", bgcolor = priceColor, text_color = tableTextColor, tooltip = "Price change")
-        table.cell(table_id = indicatorPanel, column = 1, row = 2, text = str.format("{0,number,#.##}%", priceChange * 100), bgcolor = priceColor, text_color = tableTextColor, tooltip = "Price change")
-//#endregion
+        table.cell(table_id = indicatorPanel, column = 0, row = 2, text = "📐", bgcolor = priceColor, text_color = tableTextColor, tooltip = "Сhange prices for the last session")
+        table.cell(table_id = indicatorPanel, column = 1, row = 2, text = str.format("{0,number,#.##}%", priceChange * 100), bgcolor = priceColor, text_color = tableTextColor, tooltip = "Сhange prices for the last session")
+//#endregion`

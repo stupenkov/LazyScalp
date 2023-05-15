@@ -6,7 +6,7 @@
 
 //@version=5
 
-// @description TODO: add library description here
+// @description v1.1.0
 library("HLevel", true)
 
 //#region CONSTANTS ============================================
@@ -50,7 +50,6 @@ export method get(pivotsList this, int index) =>
     this.pivots.get(index)
 //#endregion
 
-
 //#region CLASS Levels ============================================
 export type level
     string side
@@ -65,13 +64,21 @@ export type level
 
 export type levelsClass
     int maxBars
+    int minNearLevels
     array<int> lifetimes
     array<level> levels
 
-export method init(levelsClass this, int maxBars = 4000) =>
+method resetNearLevels(levelsClass this) =>
+    if this.levels.size() > 0
+        for i = 0 to this.levels.size() - 1
+            level lvl = this.levels.get(i)
+            lvl.hasNearLevel := false
+
+export method init(levelsClass this, int minNearLevels, int maxBars = 4000) =>
     this.levels := array.new<level>()
     this.lifetimes := array.new<int>(10, -1)
     this.maxBars := maxBars
+    this.minNearLevels := minNearLevels
 
 export method addLifetime(levelsClass this, int period, int lifetimeBars) =>
     this.lifetimes.set(period, lifetimeBars)
@@ -81,6 +88,9 @@ export method size(levelsClass this) =>
 
 export method getAll(levelsClass this) =>
     this.levels
+
+export method get(levelsClass this, int index) =>
+    this.levels.get(index)
 
 export method delete(levelsClass this, int index) =>
     level lvl = this.levels.get(index)
@@ -99,7 +109,20 @@ export method isLifetimeExpired(levelsClass this, level lvl) =>
     else
         false
 
-export method update(levelsClass this, pivotsList pivots, float priceRange) =>
+method markStrongLevels(levelsClass this, level lvl, int nextLevelIndex, distanceBetweenNearLevels) =>
+    array<level> strongLevels = array.new<level>()
+    strongLevels.push(lvl)
+    if nextLevelIndex < this.levels.size() and lvl.crossBarIndex == -1 and not lvl.isHide 
+        for int i = nextLevelIndex to this.levels.size() - 1
+            level secondLvl = this.levels.get(i)
+            if secondLvl.crossBarIndex == -1 and math.abs(lvl.price - secondLvl.price) <= distanceBetweenNearLevels and not secondLvl.isHide
+                strongLevels.push(secondLvl)
+    if strongLevels.size() > 0 and strongLevels.size() >= this.minNearLevels 
+        for int i = 0 to strongLevels.size() - 1
+            level _level = strongLevels.get(i)
+            _level.hasNearLevel := true
+       
+export method update(levelsClass this, pivotsList pivots, float priceRange, float distanceBetweenNearLevels) =>
     pivot p = pivots.get(0)
     if not na(p.hPrice) 
         level newLevel = level.new(
@@ -116,6 +139,8 @@ export method update(levelsClass this, pivotsList pivots, float priceRange) =>
           price = p.lPrice,
           period = p.period)
         this.levels.unshift(newLevel)
+
+    this.resetNearLevels()
 
     int counter = 0
     while counter < this.levels.size()
@@ -154,6 +179,10 @@ export method update(levelsClass this, pivotsList pivots, float priceRange) =>
         // hide expired levels
         if this.isLifetimeExpired(lvl)
             lvl.isHide := true
+
+        // mark nearly levels
+        int nextLevelIndex = counter + 1 
+        this.markStrongLevels(lvl, nextLevelIndex, distanceBetweenNearLevels)
         
         counter += 1
 //#endregion
@@ -169,21 +198,23 @@ export type levelDrawerClass
     color roundPriceColor
     color defaultPriceColor
     string priceShowOptions
+    float transparent
 
-export method init(levelDrawerClass this, string priceShowOptions, color roundPriceColor = color.green, color defaultPriceColor = color.white) =>
+export method init(levelDrawerClass this, string priceShowOptions, float transparent = 70, color roundPriceColor = color.green, color defaultPriceColor = color.white) =>
     this.styles := array.new<lineStyle>()
     this.roundPriceColor := roundPriceColor
     this.defaultPriceColor := defaultPriceColor
     this.priceShowOptions := priceShowOptions
+    this.transparent := transparent
 
 export method addStyle(levelDrawerClass this, lineStyle style) =>
     this.styles.push(style)
 
-export method draw(levelDrawerClass this, array<level> levels) =>
-    if levels.size() > 0
+export method draw(levelDrawerClass this, levelsClass levelList) =>
+    if levelList.size() > 0
         lineStyle breakStyle = this.styles.last()
-        for i = 0 to levels.size() - 1
-            level lvl = levels.get(i)
+        for i = 0 to levelList.size() - 1
+            level lvl = levelList.get(i)
             lineStyle lStyle = this.styles.get(lvl.period)
             if lvl.isHide 
                 if not na(lvl.lineId)
@@ -192,6 +223,8 @@ export method draw(levelDrawerClass this, array<level> levels) =>
                     lvl.priceLableId.delete()
                 continue
 
+            float transparent = lvl.hasNearLevel ? 0 : this.transparent
+            color lineColor = color.new(lStyle.lineColor, transparent)
             if na(lvl.lineId)
                 lvl.lineId := line.new(
                   x1 = lvl.barIndex,
@@ -199,9 +232,9 @@ export method draw(levelDrawerClass this, array<level> levels) =>
                   x2 = lvl.barIndex + 1,
                   y2 = lvl.price,
                   extend = extend.right,
-                  color = lStyle.lineColor,
+                  color = lineColor,
                   style = lStyle.style,
-                  width = lStyle.width)                
+                  width = lStyle.width)  
                 0
             else if lvl.crossBarIndex != -1
                 lvl.lineId.set_color(breakStyle.lineColor) 
@@ -211,12 +244,16 @@ export method draw(levelDrawerClass this, array<level> levels) =>
                 lvl.lineId.set_extend(extend.none) 
                 0
             else
-                lvl.lineId.set_color(lStyle.lineColor) 
+                lvl.lineId.set_color(lineColor) 
                 lvl.lineId.set_style(lStyle.style) 
                 lvl.lineId.set_width(lStyle.width) 
-                0
 
             if this.priceShowOptions != "none"
+                color textColor = if math.round_to_mintick(lvl.price / 100) * 100 == lvl.price 
+                    color.new(this.roundPriceColor, transparent)
+                else
+                    color.new(this.defaultPriceColor, transparent)
+
                 if na(lvl.priceLableId)
                     lvl.priceLableId := label.new(
                       x = lvl.barIndex,
@@ -224,10 +261,13 @@ export method draw(levelDrawerClass this, array<level> levels) =>
                       text = str.tostring(lvl.price),
                       size = this.priceShowOptions,
                       style = label.style_none,
-                      textcolor = math.round_to_mintick(lvl.price / 100) * 100 == lvl.price ? this.roundPriceColor : this.defaultPriceColor,
+                      textcolor = textColor,
                       yloc = lvl.side == SIDE_HIGH ? yloc.abovebar : yloc.belowbar)
                     0
                 else if lvl.crossBarIndex != -1
                     lvl.priceLableId.set_textcolor(breakStyle.lineColor)
+                    0
+                else
+                    lvl.priceLableId.set_textcolor(textColor)
                     0
 //#endregion
