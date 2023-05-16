@@ -93,7 +93,7 @@ updatePriceDistanceLabel(label lbl, HLevel.level lvl, float labelOffset, color c
     if distance >= 0 and distance < 1
         formatted := str.format("{0,number,#.##}%", distance * 100)
 
-    lbl.set_x(bar_index + 15)
+    lbl.set_x(bar_index + 10)
     lbl.set_y(close + labelOffset * (math.sqrt(secondsInCurrentPeriod / 10)) / 15)
     lbl.set_text(formatted)
     lbl.set_color(distance < 0 ? defaultClr : clr)
