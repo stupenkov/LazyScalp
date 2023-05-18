@@ -43,6 +43,7 @@ float maxLevelDistanceCoef = input.float(defval = 0.7, title = "Max distance to 
 // Price
 string priceShowOptions = input.string(defval = size.normal, options = [size.huge, size.large, size.normal, size.small, size.tiny, "none"], title = "Size", group = "price")
 color defaultPriceColor = input.color(defval = color.white, title = "Color", group = "price")
+color roundPriceColor = input.color(defval = color.lime, title = "Round price color", group = "price")
 
 // Visual
 bool showLogo = input.bool(defval = true, title = "Show logo", group = "visual")
@@ -113,7 +114,7 @@ if not isInit
     levels.addLifetime(GLOBAL_PERIOD, globalLevelLifetimeBars)
     levels.addLifetime(BREAK_PERIOD, breakLevelLifetimeBars)
 
-    drawer.init(priceShowOptions = priceShowOptions, transparent = weakLevelTransparent, defaultPriceColor = defaultPriceColor)
+    drawer.init(priceShowOptions = priceShowOptions, transparent = weakLevelTransparent, defaultPriceColor = defaultPriceColor, roundPriceColor = roundPriceColor)
     drawer.addStyle(HLevel.lineStyle.new(localLevelWidth, localLevelColor))
     drawer.addStyle(HLevel.lineStyle.new(middleLevelWidth, middleLevelColor))
     drawer.addStyle(HLevel.lineStyle.new(globalLevelWidth, globalLevelColor))
