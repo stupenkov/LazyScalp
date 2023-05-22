@@ -5,7 +5,7 @@
 // © stupean
 
 //@version=5
-indicator("Scalping level [Lite] 1.2.0", overlay = true, max_lines_count = 500)
+indicator("Scalping level [Lite] 1.3.0", overlay = true, max_lines_count = 500)
 import stupean/HLevel/40 as HLevel
 
 //#region INPUTS ============================================
@@ -51,6 +51,7 @@ bool showCorrelation = input.bool(defval = true, title = "Correlation threshold"
 float correlationThreshold = input.float(defval = 0.5, title = "", inline = "correlation", group = "visual")
 bool showNatr = input.bool(defval = true, title = "Natr",  group = "visual")
 bool showPriceChange = input.bool(defval = true, title = "Price change",  group = "visual")
+bool showDayAtrDistance = input.bool(defval = true, title = "Percentage of average daily ATR",  group = "visual")
 //#endregion
 
 //#region CONSTANTS ============================================
@@ -104,6 +105,10 @@ updatePriceDistanceLabel(label lbl, HLevel.level lvl, float labelOffset, color c
 float natr = request.security(syminfo.ticker, "5", ta.ema(ta.tr(true), 14) / close)
 float correlation = ta.correlation(request.security("BINANCE:BTCUSDT.P", "5", close), request.security(syminfo.ticker, "5", close), 20)
 float priceChange = (request.security(syminfo.ticker, "D", close) - request.security(syminfo.ticker, "D", open)) / close
+
+float customAtr = request.security(syminfo.ticker, "D", ta.atr(7))
+float dayAtr1D = request.security(syminfo.ticker, "D", ta.atr(1))
+float avgDayAtr = na(customAtr) ? dayAtr1D : customAtr
 //#endregion =========================================================================
 
 //#region INITIALIZATION =================================================================
@@ -167,4 +172,9 @@ if barstate.islast
         color priceColor = priceChange > 0 ? successColor : priceChange < 0 ? faildColor : tableBgColor
         table.cell(table_id = indicatorPanel, column = 0, row = 2, text = "📐", bgcolor = priceColor, text_color = tableTextColor, tooltip = "Сhange prices for the last session")
         table.cell(table_id = indicatorPanel, column = 1, row = 2, text = str.format("{0,number,#.##}%", priceChange * 100), bgcolor = priceColor, text_color = tableTextColor, tooltip = "Сhange prices for the last session")
+    if showDayAtrDistance
+        float percentageDayAtr = dayAtr1D * 100 / avgDayAtr
+        color dayAtrColor = percentageDayAtr >= 100 ? successColor : tableBgColor
+        table.cell(table_id = indicatorPanel, column = 0, row = 3, text = "📏", bgcolor = dayAtrColor, text_color = tableTextColor, tooltip = "Percentage of average daily ATR")
+        table.cell(table_id = indicatorPanel, column = 1, row = 3, text = str.format("{0,number,##}%", percentageDayAtr), bgcolor = dayAtrColor, text_color = tableTextColor, tooltip = "Percentage of average daily ATR")
 //#endregion`
