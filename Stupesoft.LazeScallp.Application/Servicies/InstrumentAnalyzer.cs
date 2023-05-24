@@ -39,7 +39,7 @@ public class InstrumentAnalyzer : IInstrumentAnslyzer
             if (_dateTimeProvider.GetCurrentTime() - notification!.LastHigh >= _lagNotificationTime)
             {
                 TimeSpan? duration = _dateTimeProvider.GetCurrentTime() - instrument.HighDetectionLevelTime;
-                var text = $"Инструмент тогруется возле верхнего уровня {TimeToStringFormat(duration)}.";
+                var text = $"Инструмент торгуется возле верхнего уровня {TimeToStringFormat(duration)}.";
                 signals.Add(new(true, InstrumentState.TradingNearLevel, text));
             }
         }
@@ -53,7 +53,7 @@ public class InstrumentAnalyzer : IInstrumentAnslyzer
             if (_dateTimeProvider.GetCurrentTime() - notification!.LastLow >= _lagNotificationTime)
             {
                 TimeSpan? duration = _dateTimeProvider.GetCurrentTime() - instrument.LowDetectionLevelTime;
-                var text = $"Инструмент тогруется возле нижнего уровня {TimeToStringFormat(duration)}.";
+                var text = $"Инструмент торгуется возле нижнего уровня {TimeToStringFormat(duration)}.";
                 signals.Add(new(false, InstrumentState.TradingNearLevel, text));
             }
         }
