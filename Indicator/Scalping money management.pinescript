@@ -1,0 +1,95 @@
+﻿// Author: Anton Stupenkov
+// Email: stupean@gmail.com
+// Screener: https://t.me/LazyScalp
+// © stupean
+
+//@version=5
+indicator("Scalping money management 1.0.0", overlay = true)
+
+float deposit = input.float(defval = 1000, title = "Deposit")
+float lossPerTrade = input.float(defval = 1, title = "Maximum risk per trade, %")
+float commission = input.float(defval = 0.1, title = "Commission and other, %", tooltip = "Add to stoploss")
+
+string position = input.string(defval = position.bottom_right, options = [position.bottom_right, position.bottom_center, position.bottom_left, position.top_right, position.top_center, position.top_left])
+color tableBgColor = input.color(defval = color.new(#363636, 50) , title = "Table background color")
+color tableTextColor = input.color(defval = color.white, title = "Table text color")
+
+bool showTableTitle = input.bool(defval = true, title = "Show table titles")
+
+bool showAtrSL = input.bool(defval = true, title = "Show ATR stop loss", group = "Stop loss by ATR")
+string timeframeSL = input.timeframe(defval = "3", title = "ATR timeframe", group = "Stop loss by ATR")
+int lengthSL = input.int(defval = 200, title = "Stop less length", group = "Stop loss by ATR")
+color colorAtrSL = input.color(defval = color.yellow, title = "ATR stop loss color", group = "Stop loss by ATR")
+
+bool showStopLoss1 = input.bool(defval = true, title = "", group = "Stoploss", inline = "l1")
+float stopLoss1 = input.float(defval = 0.1, title = "Stop loss, %", group = "Stoploss", inline = "l1")
+
+bool showStopLoss2 = input.bool(defval = true, title = "", group = "Stoploss", inline = "l2")
+float stopLoss2 = input.float(defval = 0.2, title = "Stop loss, %", group = "Stoploss", inline = "l2")
+
+bool showStopLoss3 = input.bool(defval = true, title = "", group = "Stoploss", inline = "l3")
+float stopLoss3 = input.float(defval = 0.3, title = "Stop loss, %", group = "Stoploss", inline = "l3")
+
+bool showStopLoss4 = input.bool(defval = true, title = "", group = "Stoploss", inline = "l4")
+float stopLoss4 = input.float(defval = 0.4, title = "Stop loss, %", group = "Stoploss", inline = "l4")
+
+bool showStopLoss5 = input.bool(defval = true, title = "", group = "Stoploss", inline = "l5")
+float stopLoss5 = input.float(defval = 0.5, title = "Stop loss, %", group = "Stoploss", inline = "l5")
+
+bool showStopLoss6 = input.bool(defval = true, title = "", group = "Stoploss", inline = "l6")
+float stopLoss6 = input.float(defval = 0.6, title = "Stop loss, %", group = "Stoploss", inline = "l6")
+
+bool showStopLoss7 = input.bool(defval = true, title = "", group = "Stoploss", inline = "l7")
+float stopLoss7 = input.float(defval = 0.7, title = "Stop loss, %", group = "Stoploss", inline = "l7")
+
+bool showStopLoss8 = input.bool(defval = true, title = "", group = "Stoploss", inline = "l8")
+float stopLoss8 = input.float(defval = 0.8, title = "Stop loss, %", group = "Stoploss", inline = "l8")
+
+bool showStopLoss9 = input.bool(defval = true, title = "", group = "Stoploss", inline = "l9")
+float stopLoss9 = input.float(defval = 0.9, title = "Stop loss, %", group = "Stoploss", inline = "l9")
+
+bool showStopLoss10 = input.bool(defval = true, title = "", group = "Stoploss", inline = "l10")
+float stopLoss10 = input.float(defval = 1, title = "Stop loss, %", group = "Stoploss", inline = "l10")
+
+type stoplossType
+    float value
+    bool isShow
+
+var array<stoplossType> stopLosses = array.new<stoplossType>()
+if barstate.isfirst
+    stopLosses.push(stoplossType.new(stopLoss1, showStopLoss1))
+    stopLosses.push(stoplossType.new(stopLoss2, showStopLoss2))
+    stopLosses.push(stoplossType.new(stopLoss3, showStopLoss3))
+    stopLosses.push(stoplossType.new(stopLoss4, showStopLoss4))
+    stopLosses.push(stoplossType.new(stopLoss5, showStopLoss5))
+    stopLosses.push(stoplossType.new(stopLoss6, showStopLoss6))
+    stopLosses.push(stoplossType.new(stopLoss7, showStopLoss7))
+    stopLosses.push(stoplossType.new(stopLoss8, showStopLoss8))
+    stopLosses.push(stoplossType.new(stopLoss9, showStopLoss9))
+    stopLosses.push(stoplossType.new(stopLoss10, showStopLoss10))
+
+calculateVolumeByStopLoss(float stoploss) =>
+    (deposit * lossPerTrade) / (stoploss + commission)
+
+var table indicatorPanel = table.new(
+  position = position,
+  columns = 2,
+  rows = 15)
+
+float atrSL = request.security(syminfo.ticker, timeframeSL, ta.atr(lengthSL)) / close
+
+if barstate.islast
+    if showTableTitle
+        table.cell(table_id = indicatorPanel, column = 0, row = 0, text = "SL", bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "Stop loss")
+        table.cell(table_id = indicatorPanel, column = 1, row = 0, text = "Money", bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "money")
+
+    if showAtrSL
+        table.cell(table_id = indicatorPanel, column = 0, row = 1, text = str.tostring(math.round(atrSL * 100, 2)) + "%", bgcolor = tableBgColor, text_color = colorAtrSL, tooltip = "ATR stop loss")
+        table.cell(table_id = indicatorPanel, column = 1, row = 1, text = str.tostring(math.round(calculateVolumeByStopLoss(atrSL * 100))), bgcolor = tableBgColor, text_color = colorAtrSL, tooltip = "money")
+
+    for i = 0 to stopLosses.size() - 1 
+        stoplossType stopLoss = stopLosses.get(i)
+        if stopLoss.isShow
+            float vol = calculateVolumeByStopLoss(stopLoss.value)
+            table.cell(table_id = indicatorPanel, column = 0, row = i + 2, text = str.tostring(math.round(stopLoss.value, 2)) + "%", bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "Stop loss")
+            table.cell(table_id = indicatorPanel, column = 1, row = i + 2, text = str.tostring(math.round(vol)), bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "money")

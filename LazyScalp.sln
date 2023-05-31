@@ -14,6 +14,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Indicator", "Indicator", "{68CF155F-0E01-4EDB-838C-5A7E24DDBE23}"
 	ProjectSection(SolutionItems) = preProject
 		Indicator\HLevel.lib.pinescript = Indicator\HLevel.lib.pinescript
+		Indicator\Scalping money management.pinescript = Indicator\Scalping money management.pinescript
 		Indicator\ScalpingLevelLite.pinescript = Indicator\ScalpingLevelLite.pinescript
 		Indicator\ScalpingLevelPRO.pinescript = Indicator\ScalpingLevelPRO.pinescript
 		Indicator\Serializer.pinescript = Indicator\Serializer.pinescript
@@ -29,9 +30,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stupesoft.LazyScalp.Trading
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{6D328013-C7D7-456A-93B5-3B4AECEBA1BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScalpStations.IntegrationTests", "Tests\ScalpStation.UnitTests\ScalpStations.IntegrationTests.csproj", "{874C7CEA-9E48-456A-B724-9C81702E861E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScalpStations.IntegrationTests", "Tests\ScalpStation.UnitTests\ScalpStations.IntegrationTests.csproj", "{874C7CEA-9E48-456A-B724-9C81702E861E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stupesoft.LazyScalp.UnitTests", "Tests\Stupesoft.LazyScalp.UnitTests\Stupesoft.LazyScalp.UnitTests.csproj", "{1072C52A-C34A-4B85-81F6-B0DA3EA2F904}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stupesoft.LazyScalp.UnitTests", "Tests\Stupesoft.LazyScalp.UnitTests\Stupesoft.LazyScalp.UnitTests.csproj", "{1072C52A-C34A-4B85-81F6-B0DA3EA2F904}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
