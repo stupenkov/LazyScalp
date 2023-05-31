@@ -10,11 +10,11 @@ float deposit = input.float(defval = 1000, title = "Deposit")
 float lossPerTrade = input.float(defval = 1, title = "Maximum risk per trade, %")
 float commission = input.float(defval = 0.1, title = "Commission and other, %", tooltip = "Add to stoploss")
 
-string position = input.string(defval = position.bottom_right, options = [position.bottom_right, position.bottom_center, position.bottom_left, position.top_right, position.top_center, position.top_left])
-color tableBgColor = input.color(defval = color.new(#363636, 50) , title = "Table background color")
-color tableTextColor = input.color(defval = color.white, title = "Table text color")
-
-bool showTableTitle = input.bool(defval = true, title = "Show table titles")
+// panel
+string position = input.string(defval = position.bottom_right, options = [position.bottom_right, position.bottom_center, position.bottom_left, position.top_right, position.top_center, position.top_left], group = "panel")
+color tableBgColor = input.color(defval = color.new(#363636, 50) , title = "Background color", group = "panel")
+color tableTextColor = input.color(defval = color.white, title = "Text color", group = "panel")
+bool showTableTitle = input.bool(defval = true, title = "Show titles", group = "panel")
 
 bool showAtrSL = input.bool(defval = true, title = "Show ATR stop loss", group = "Stop loss by ATR")
 string timeframeSL = input.timeframe(defval = "3", title = "ATR timeframe", group = "Stop loss by ATR")
