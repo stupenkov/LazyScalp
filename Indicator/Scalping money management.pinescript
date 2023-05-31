@@ -53,32 +53,40 @@ float stopLoss9 = input.float(defval = 0.9, title = "Stop loss, %", group = "Sto
 bool showStopLoss10 = input.bool(defval = true, title = "", group = "Stoploss", inline = "l10")
 float stopLoss10 = input.float(defval = 1, title = "Stop loss, %", group = "Stoploss", inline = "l10")
 
-type stoplossType
-    float value
+type modelType
+    float sl
+    float money
+    int pips
+    color textColor
     bool isShow
 
-var array<stoplossType> stopLosses = array.new<stoplossType>()
-if barstate.isfirst
-    stopLosses.push(stoplossType.new(stopLoss1, showStopLoss1))
-    stopLosses.push(stoplossType.new(stopLoss2, showStopLoss2))
-    stopLosses.push(stoplossType.new(stopLoss3, showStopLoss3))
-    stopLosses.push(stoplossType.new(stopLoss4, showStopLoss4))
-    stopLosses.push(stoplossType.new(stopLoss5, showStopLoss5))
-    stopLosses.push(stoplossType.new(stopLoss6, showStopLoss6))
-    stopLosses.push(stoplossType.new(stopLoss7, showStopLoss7))
-    stopLosses.push(stoplossType.new(stopLoss8, showStopLoss8))
-    stopLosses.push(stoplossType.new(stopLoss9, showStopLoss9))
-    stopLosses.push(stoplossType.new(stopLoss10, showStopLoss10))
+createModel(float stopLoss, bool isShow, color textColor = na) =>
+    modelType.new(
+      sl = stopLoss,
+      money = (deposit * lossPerTrade) / (stopLoss + commission),
+      pips = math.round(stopLoss / 100 * close / syminfo.mintick),
+      isShow = isShow,
+      textColor = na(textColor) ? tableTextColor : textColor)
 
-calculateVolumeByStopLoss(float stoploss) =>
-    (deposit * lossPerTrade) / (stoploss + commission)
+float atrSL = (request.security(syminfo.ticker, timeframeSL, ta.atr(lengthSL)) / close) * 100
+
+array<modelType> models = array.new<modelType>()
+models.push(createModel(atrSL, showAtrSL, colorAtrSL))
+models.push(createModel(stopLoss1, showStopLoss1))
+models.push(createModel(stopLoss2, showStopLoss2))
+models.push(createModel(stopLoss3, showStopLoss3))
+models.push(createModel(stopLoss4, showStopLoss4))
+models.push(createModel(stopLoss5, showStopLoss5))
+models.push(createModel(stopLoss6, showStopLoss6))
+models.push(createModel(stopLoss7, showStopLoss7))
+models.push(createModel(stopLoss8, showStopLoss8))
+models.push(createModel(stopLoss9, showStopLoss9))
+models.push(createModel(stopLoss10, showStopLoss10))
 
 var table indicatorPanel = table.new(
   position = position,
   columns = 3,
   rows = 15)
-
-float atrSL = request.security(syminfo.ticker, timeframeSL, ta.atr(lengthSL)) / close
 
 if barstate.islast
     if showTableTitle
@@ -87,17 +95,11 @@ if barstate.islast
             table.cell(table_id = indicatorPanel, column = 1, row = 0, text = "Pips", bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "Stop loss in pips")
         table.cell(table_id = indicatorPanel, column = 2, row = 0, text = "Money", bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "money")
 
-    if showAtrSL
-        table.cell(table_id = indicatorPanel, column = 0, row = 1, text = str.tostring(math.round(atrSL * 100, 2)) + "%", bgcolor = tableBgColor, text_color = colorAtrSL, tooltip = "ATR stop loss")
+    for i = 0 to models.size() - 1
+        modelType model = models.get(i)
+        if not model.isShow
+            continue
+        table.cell(table_id = indicatorPanel, column = 0, row = i + 1, text = str.tostring(math.round(model.sl, 2)) + "%", bgcolor = tableBgColor, text_color = model.textColor, tooltip = "Stop loss")
         if showPips
-            table.cell(table_id = indicatorPanel, column = 1, row = 1, text = str.tostring(math.round(atrSL * close / syminfo.mintick)), bgcolor = tableBgColor, text_color = colorAtrSL, tooltip = "pips")
-        table.cell(table_id = indicatorPanel, column = 2, row = 1, text = str.tostring(math.round(calculateVolumeByStopLoss(atrSL * 100))), bgcolor = tableBgColor, text_color = colorAtrSL, tooltip = "money")
-
-    for i = 0 to stopLosses.size() - 1 
-        stoplossType stopLoss = stopLosses.get(i)
-        if stopLoss.isShow
-            float vol = calculateVolumeByStopLoss(stopLoss.value)
-            table.cell(table_id = indicatorPanel, column = 0, row = i + 2, text = str.tostring(math.round(stopLoss.value, 2)) + "%", bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "Stop loss")
-            if showPips
-                table.cell(table_id = indicatorPanel, column = 1, row = i + 2, text = str.tostring(math.round(stopLoss.value / 100 * close / syminfo.mintick)), bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "pips")
-            table.cell(table_id = indicatorPanel, column = 2, row = i + 2, text = str.tostring(math.round(vol)), bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "money")
+            table.cell(table_id = indicatorPanel, column = 1, row = i + 1, text = str.tostring(model.pips), bgcolor = tableBgColor, text_color = model.textColor, tooltip = "pips")
+        table.cell(table_id = indicatorPanel, column = 2, row = i + 1, text = str.tostring(math.round(model.money)), bgcolor = tableBgColor, text_color = model.textColor, tooltip = "money")
