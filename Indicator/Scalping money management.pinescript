@@ -15,7 +15,9 @@ string position = input.string(defval = position.bottom_right, options = [positi
 color tableBgColor = input.color(defval = color.new(#363636, 50) , title = "Background color", group = "panel")
 color tableTextColor = input.color(defval = color.white, title = "Text color", group = "panel")
 bool showTableTitle = input.bool(defval = true, title = "Show titles", group = "panel")
+bool showPips = input.bool(defval = true, title = "Show stop loss in pips", group = "panel")
 
+// ATR SL
 bool showAtrSL = input.bool(defval = true, title = "Show ATR stop loss", group = "Stop loss by ATR")
 string timeframeSL = input.timeframe(defval = "3", title = "ATR timeframe", group = "Stop loss by ATR")
 int lengthSL = input.int(defval = 200, title = "Stop less length", group = "Stop loss by ATR")
@@ -73,23 +75,29 @@ calculateVolumeByStopLoss(float stoploss) =>
 
 var table indicatorPanel = table.new(
   position = position,
-  columns = 2,
+  columns = 3,
   rows = 15)
 
 float atrSL = request.security(syminfo.ticker, timeframeSL, ta.atr(lengthSL)) / close
 
 if barstate.islast
     if showTableTitle
-        table.cell(table_id = indicatorPanel, column = 0, row = 0, text = "SL", bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "Stop loss")
-        table.cell(table_id = indicatorPanel, column = 1, row = 0, text = "Money", bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "money")
+        table.cell(table_id = indicatorPanel, column = 0, row = 0, text = "SL", bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "Stop loss in %")
+        if showPips
+            table.cell(table_id = indicatorPanel, column = 1, row = 0, text = "Pips", bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "Stop loss in pips")
+        table.cell(table_id = indicatorPanel, column = 2, row = 0, text = "Money", bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "money")
 
     if showAtrSL
         table.cell(table_id = indicatorPanel, column = 0, row = 1, text = str.tostring(math.round(atrSL * 100, 2)) + "%", bgcolor = tableBgColor, text_color = colorAtrSL, tooltip = "ATR stop loss")
-        table.cell(table_id = indicatorPanel, column = 1, row = 1, text = str.tostring(math.round(calculateVolumeByStopLoss(atrSL * 100))), bgcolor = tableBgColor, text_color = colorAtrSL, tooltip = "money")
+        if showPips
+            table.cell(table_id = indicatorPanel, column = 1, row = 1, text = str.tostring(math.round(atrSL * close / syminfo.mintick)), bgcolor = tableBgColor, text_color = colorAtrSL, tooltip = "pips")
+        table.cell(table_id = indicatorPanel, column = 2, row = 1, text = str.tostring(math.round(calculateVolumeByStopLoss(atrSL * 100))), bgcolor = tableBgColor, text_color = colorAtrSL, tooltip = "money")
 
     for i = 0 to stopLosses.size() - 1 
         stoplossType stopLoss = stopLosses.get(i)
         if stopLoss.isShow
             float vol = calculateVolumeByStopLoss(stopLoss.value)
             table.cell(table_id = indicatorPanel, column = 0, row = i + 2, text = str.tostring(math.round(stopLoss.value, 2)) + "%", bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "Stop loss")
-            table.cell(table_id = indicatorPanel, column = 1, row = i + 2, text = str.tostring(math.round(vol)), bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "money")
+            if showPips
+                table.cell(table_id = indicatorPanel, column = 1, row = i + 2, text = str.tostring(math.round(stopLoss.value / 100 * close / syminfo.mintick)), bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "pips")
+            table.cell(table_id = indicatorPanel, column = 2, row = i + 2, text = str.tostring(math.round(vol)), bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "money")
