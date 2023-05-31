@@ -62,6 +62,10 @@ export type level
     bool isHide
     label priceLableId
 
+method time(level this) =>
+    int bars = bar_index - this.barIndex
+    timeframe.in_seconds(timeframe.period) * bars
+
 export type levelsClass
     int maxBars
     int minNearLevels
@@ -121,7 +125,7 @@ method markStrongLevels(levelsClass this, level lvl, int nextLevelIndex, distanc
         for int i = 0 to strongLevels.size() - 1
             level _level = strongLevels.get(i)
             _level.hasNearLevel := true
-       
+ 
 export method update(levelsClass this, pivotsList pivots, float priceRange, float distanceBetweenNearLevels) =>
     pivot p = pivots.get(0)
     if not na(p.hPrice) 
@@ -220,6 +224,7 @@ export type levelDrawerClass
     color defaultPriceColor
     string priceShowOptions
     float transparent
+    bool showLevelTime
 
 export method init(levelDrawerClass this, string priceShowOptions, float transparent = 70, color roundPriceColor = color.green, color defaultPriceColor = color.white) =>
     this.styles := array.new<lineStyle>()
@@ -275,11 +280,15 @@ export method draw(levelDrawerClass this, levelsClass levelList) =>
                 else
                     color.new(this.defaultPriceColor, transparent)
 
+                string labelText = str.format("{0,number}", lvl.price)
+                if this.showLevelTime
+                    labelText += str.format("\n{0,number,#}h", lvl.time() / 3600)
+
                 if na(lvl.priceLableId)
                     lvl.priceLableId := label.new(
                       x = lvl.barIndex,
                       y = 0,
-                      text = str.tostring(lvl.price),
+                      text =  labelText,
                       size = this.priceShowOptions,
                       style = label.style_none,
                       textcolor = textColor,
@@ -290,5 +299,6 @@ export method draw(levelDrawerClass this, levelsClass levelList) =>
                     0
                 else
                     lvl.priceLableId.set_textcolor(textColor)
+                    lvl.priceLableId.set_text(labelText)
                     0
 //#endregion
