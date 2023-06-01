@@ -280,7 +280,7 @@ export method draw(levelDrawerClass this, levelsClass levelList) =>
                 else
                     color.new(this.defaultPriceColor, transparent)
 
-                string labelText = str.format("{0,number}", lvl.price)
+                string labelText = str.tostring(lvl.price)
                 if this.showLevelTime
                     labelText += str.format("\n{0,number,#}h", lvl.time() / 3600)
 
