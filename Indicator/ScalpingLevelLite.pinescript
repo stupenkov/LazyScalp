@@ -5,8 +5,8 @@
 // © stupean
 
 //@version=5
-indicator("Scalping level [Lite] 1.3.0", overlay = true, max_lines_count = 500)
-import stupean/HLevel/48 as HLevel
+indicator("Scalping level 1.3.0", overlay = true, max_lines_count = 500)
+import stupean/HLevel/49 as HLevel
 
 //#region INPUTS ============================================
 // Local level
