@@ -56,8 +56,6 @@ bool showPriceChange = input.bool(defval = true, title = "Price change",  group 
 bool showDayAtrDistance = input.bool(defval = true, title = "Percentage of average daily ATR",  group = "indicators")
 bool showAvgVolume5min = input.bool(defval = true, title = "Average volume 5 min",  group = "indicators")
 
-// Visual
-bool showLogo = input.bool(defval = true, title = "Show logo", group = "visual")
 //#endregion
 
 //#region CONSTANTS ============================================
@@ -187,17 +185,6 @@ updatePriceDistanceLabel(highLevelPriceLabel, highLevel, priceRangeAtr, color.gr
 updatePriceDistanceLabel(lowLevelPriceLabel, lowLevel, -priceRangeAtr, color.red, color.new(color.gray, 60))
 
 drawer.draw(levels)
-//#endregion
-
-//#region DISLPLAY LOGO ============================================
-var table logoPanel = table.new(
-  position = position.bottom_left,
-  columns = 1,
-  rows = 5)
-
-if showLogo and barstate.islast
-    table.cell(table_id = logoPanel, column = 0, row = 0, text = "TOP CRYPTO SCREENER: https://t.me/LazyScalp", bgcolor = color.rgb(152, 154, 161), text_color = color.black)
-    table.cell(table_id = logoPanel, column = 0, row = 3, text = " ")
 //#endregion
 
 //#region DISLPLAY INDICATORS ============================================
