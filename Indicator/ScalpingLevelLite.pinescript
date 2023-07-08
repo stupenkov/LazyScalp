@@ -54,7 +54,6 @@ float correlationThreshold = input.float(defval = 0.5, title = "", inline = "cor
 bool showNatr = input.bool(defval = true, title = "Natr",  group = "indicators")
 bool showPriceChange = input.bool(defval = true, title = "Price change",  group = "indicators")
 bool showDayAtrDistance = input.bool(defval = true, title = "Percentage of average daily ATR",  group = "indicators")
-bool showAvgVolume5min = input.bool(defval = true, title = "Average volume 5 min",  group = "indicators")
 
 //#endregion
 
@@ -128,12 +127,6 @@ bigNumberFormater(value) =>
     else 
         _value
 
-getAvgVolume(int bars) =>
-    float avgVolume = 0
-    for i = 1 to bars by 1
-        avgVolume += volume[i]
-    avgVolume / bars
-
 getDollarAvgVolume(int bars) =>
     float avgDollarVolume = 0
     for i = 1 to bars by 1
@@ -150,7 +143,6 @@ float customAtr = request.security(syminfo.ticker, "D", ta.atr(7))
 float dayAtr1D = request.security(syminfo.ticker, "D", ta.atr(1))
 float avgDayAtr = na(customAtr) ? dayAtr1D : customAtr
 
-float avgVolume5min = request.security(syminfo.ticker, "5", getAvgVolume(288))
 float avgDollarVolume = request.security(syminfo.ticker, "5", getDollarAvgVolume(288))
 //#endregion =========================================================================
 
@@ -214,7 +206,4 @@ if barstate.islast
         color dayAtrColor = percentageDayAtr >= 100 ? successColor : tableBgColor
         table.cell(table_id = indicatorPanel, column = 0, row = 4, text = "📏", bgcolor = dayAtrColor, text_color = tableTextColor, tooltip = "Percentage of average daily ATR")
         table.cell(table_id = indicatorPanel, column = 1, row = 4, text = str.format("{0,number,##}%", percentageDayAtr), bgcolor = dayAtrColor, text_color = tableTextColor, tooltip = "Percentage of average daily ATR")
-    if showAvgVolume5min
-        table.cell(table_id = indicatorPanel, column = 0, row = 5, text = "📊", bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "Average volume 5 min")
-        table.cell(table_id = indicatorPanel, column = 1, row = 5, text = bigNumberFormater(avgVolume5min), bgcolor = tableBgColor, text_color = tableTextColor, tooltip = "Average volume 5 min")
 //#endregion`
