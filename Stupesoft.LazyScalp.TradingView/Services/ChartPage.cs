@@ -59,12 +59,15 @@ internal class ChartPage : IPageChart
     public async Task LoginAsync(string login, string password)
     {
         _webDriver.Navigate().GoToUrl(_pageUrl);
-        _wait.Until(ExpectedConditions.ElementToBeClickable(_humburgerButton())).Click();
-        _wait.Until(ExpectedConditions.ElementToBeClickable(_enterItem())).Click();
-        _wait.Until(ExpectedConditions.ElementToBeClickable(_emailLoginButton())).Click();
-        _emailInput().SendKeys(login);
-        _passwordInput().SendKeys(password);
-        _loginSubmitButton().Click();
+        if (!_scanerOptions.Value.SkipAuth)
+        {
+            _wait.Until(ExpectedConditions.ElementToBeClickable(_humburgerButton())).Click();
+            _wait.Until(ExpectedConditions.ElementToBeClickable(_enterItem())).Click();
+            _wait.Until(ExpectedConditions.ElementToBeClickable(_emailLoginButton())).Click();
+            _emailInput().SendKeys(login);
+            _passwordInput().SendKeys(password);
+            _loginSubmitButton().Click();
+        }
 
         await Task.Delay(1000);
     }
@@ -73,8 +76,11 @@ internal class ChartPage : IPageChart
     {
         await WaitAndRefreshAsync(() =>
         {
-            _wait.Until(ExpectedConditions.ElementToBeClickable(_chartControlButton())).Click();
-            _wait.Until(ExpectedConditions.ElementToBeClickable(_firstChartTemplateItem())).Click();
+            if (!_scanerOptions.Value.SkipAuth)
+            {
+                _wait.Until(ExpectedConditions.ElementToBeClickable(_chartControlButton())).Click();
+                _wait.Until(ExpectedConditions.ElementToBeClickable(_firstChartTemplateItem())).Click();
+            }
         });
     }
 
