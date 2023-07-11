@@ -1,3 +1,5 @@
+using Castle.Core.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using Stupesoft.LazeScallp.Application.Abstractions;
@@ -40,8 +42,10 @@ public class ScalpStationFilterTest
         converterMock.Setup(x => x.ConvertToTradingViewFeatureSymbol(It.Is<string>(x => instrumentList.Any(i => i.Symbol == x))))
             .Returns<string>(x => x + ".P");
 
+        var loggerMock = new Mock<ILogger<ScalpStationFilter>>();
+
         // Act
-        var filter = new ScalpStationFilter(scalpStationMock.Object, converterMock.Object, scalpStationOptionsMock.Object);
+        var filter = new ScalpStationFilter(scalpStationMock.Object, converterMock.Object, scalpStationOptionsMock.Object, loggerMock.Object);
         await filter.UpdateAsync();
         var result = await filter.FilterAsync(new FinInstrument { Ticker = filteredSymbol });
 
