@@ -1,0 +1,76 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © stupean
+
+//@version=5
+indicator("ATRLevels 1.0.0", overlay = true)
+
+int atrLength = input.int(defval = 5, title = "Daily ATR length", minval = 1)
+color defaultColor100 = input.color(defval = color.new(color.gray, 20), title = "100% lines")
+color defaultColor50 = input.color(defval = color.new(color.gray, 50), title = "50% lines")
+color defaultColor25 = input.color(defval = color.new(color.gray, 80), title = "25% and 75% lines")
+
+type LevelOption
+    float ratio
+    color lvlColor
+    string style = line.style_solid
+    int width = 1 
+
+type Options
+    array<LevelOption> levelOptions
+
+type Level
+    line ln
+    label lb
+
+type ATRLevels
+    array<Level> levels
+    Options options
+
+createDefaultLevelsOptions() =>
+    array.from(
+      LevelOption.new(1, defaultColor100),
+      LevelOption.new(0.75, defaultColor25),
+      LevelOption.new(0.5, defaultColor50),
+      LevelOption.new(0.25, defaultColor25),
+      LevelOption.new(0, defaultColor100),
+      LevelOption.new(-0.25, defaultColor25),
+      LevelOption.new(-0.5, defaultColor50),
+      LevelOption.new(-0.75, defaultColor25),
+      LevelOption.new(-1, defaultColor100))
+
+enrichOptions(Options options) =>
+    options.levelOptions := na(options.levelOptions) ? createDefaultLevelsOptions() : options.levelOptions
+
+newInstance(Options options = na) =>
+    Options _options = na(options) ? Options.new() : options
+    enrichOptions(_options)
+    array<Level> levels = array.new<Level>()
+    for i = 0 to _options.levelOptions.size() - 1
+        LevelOption lvlOption = _options.levelOptions.get(i)
+        line ln = line.new(bar_index, open, bar_index, open, color = lvlOption.lvlColor)
+        label lb = label.new(bar_index, open, str.format("{0,number,percent}", lvlOption.ratio), style = label.style_none, textcolor = lvlOption.lvlColor)
+        Level lvl = Level.new(ln, lb)
+        levels.push(lvl)
+    ATRLevels.new(levels = levels, options = _options)
+
+method update(ATRLevels this, float atr) =>
+    float priceStep = atr / 4
+    for i = 0 to this.levels.size() - 1
+        Level lvl = this.levels.get(i)
+        LevelOption lvlOption = this.options.levelOptions.get(i)
+        line ln = lvl.ln
+        label lb = lvl.lb
+        ln.set_x2(bar_index + 300)
+        if session.isfirstbar_regular
+            float price = open + (lvlOption.ratio * atr)
+            ln.set_x1(bar_index)
+            ln.set_y1(price)
+            ln.set_y2(price)
+            lb.set_x(bar_index)
+            lb.set_y(price)
+
+// main
+var Options options = Options.new(levelOptions = createDefaultLevelsOptions())
+var ATRLevels atrLevels = newInstance(options)
+float atr = request.security(syminfo.tickerid, "D", ta.atr(atrLength))[1]
+atrLevels.update(atr)
