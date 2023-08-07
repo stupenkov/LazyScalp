@@ -4,6 +4,7 @@ using Stupesoft.LazeScallp.Application.Configurations;
 using Stupesoft.LazeScallp.Application.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
 
 namespace Stupesoft.LazyScalp.Infrastructure.Telegram;
@@ -22,7 +23,11 @@ public class TelegramBot : INotification
     public async Task SendAsync(NotificationMessage message)
     {
         InputOnlineFile file = new InputOnlineFile(new MemoryStream(message.Image));
-        await _client.SendPhotoAsync(new ChatId(_telegramBotOptions.Value.ChatId!), file, message.Text);
+        await _client.SendPhotoAsync(new ChatId(
+            _telegramBotOptions.Value.ChatId!),
+            file,
+            message.Text,
+            parseMode: ParseMode.Markdown);
     }
 
     public void RemoveAllMessage(int maxId = 9999)

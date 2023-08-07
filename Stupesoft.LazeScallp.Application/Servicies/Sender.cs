@@ -37,7 +37,7 @@ public class Sender : ISender
         if (signals.Any(x => x.State == InstrumentState.ReachedLevel || x.State == InstrumentState.TradingNearLevel))
         {
             var image = _imagePreparation.Crop(instrument.HistoryData[^1].ChartImage!);
-            var text = $"{instrument.Ticker}. " + string.Join(' ', signals.Select(x => x.Message));
+            var text = $"`{instrument.Ticker}` " + string.Join(' ', signals.Select(x => x.Message));
 
             await _notification.SendAsync(new NotificationMessage(image, text));
 
