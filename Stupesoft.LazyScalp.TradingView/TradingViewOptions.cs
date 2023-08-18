@@ -14,6 +14,7 @@ public class ScanerOptions
     public int ReloadDelayTimeSecond { get; set; }
     public bool SkipAuth { get; set; }
     public string? ChromeProfile { get; set; }
+    public string? ChromeDataUserDir { get; set; }
 }
 
 public class SelectorsOptions

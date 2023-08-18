@@ -29,7 +29,7 @@ internal class WebDriverFactory : IWebDriverFactory, IDisposable
         options.AddArgument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36");
         if (_scanerOptions.Value.SkipAuth)
         {
-            options.AddArgument(@"--user-data-dir=C:\Users\Anton\AppData\Local\Google\Chrome\User Data\");
+            options.AddArgument(@$"--user-data-dir={_scanerOptions.Value.ChromeDataUserDir}");
             options.AddArgument(@$"--profile-directory={_scanerOptions.Value.ChromeProfile}");
         }
         else
